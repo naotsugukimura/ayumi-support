@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>歩みサポート - シンプルテスト</title>
+    <style>
+        body {
+            font-family: 'Noto Sans JP', sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background: #f8f9fa;
+            font-size: 18px;
+        }
+        .container {
+            background: white;
+            border-radius: 15px;
+            padding: 30px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        h1 {
+            color: #2c3e50;
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        .test-section {
+            margin-bottom: 30px;
+            padding: 20px;
+            border: 2px solid #ddd;
+            border-radius: 10px;
+            background: #fafafa;
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+            color: #555;
+        }
+        input[type="file"] {
+            width: 100%;
+            padding: 10px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            font-size: 16px;
+        }
+        button {
+            background: #67b279;
+            color: white;
+            border: none;
+            padding: 15px 25px;
+            border-radius: 25px;
+            font-size: 18px;
+            cursor: pointer;
+            margin: 10px 5px;
+            min-width: 200px;
+        }
+        button:hover {
+            background: #5a9f68;
+            transform: translateY(-2px);
+        }
+        button:disabled {
+            background: #bdc3c7;
+            cursor: not-allowed;
+            transform: none;
+        }
+        .result {
+            margin-top: 20px;
+            padding: 15px;
+            border-radius: 8px;
+            white-space: pre-wrap;
+            font-family: monospace;
+            font-size: 14px;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+        .success { background: #d4edda; border: 2px solid #c3e6cb; color: #155724; }
+        .error { background: #f8d7da; border: 2px solid #f5c6cb; color: #721c24; }
+        .loading {
+            display: none;
+            text-align: center;
+            color: #67b279;
+            font-weight: bold;
+            margin: 15px 0;
+        }
+        .status {
+            padding: 10px;
+            border-radius: 8px;
+            margin: 10px 0;
+            font-weight: bold;
+        }
+        .status.healthy { background: #d4edda; color: #155724; }
+        .status.warning { background: #fff3cd; color: #856404; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🌸 歩みサポート - 機能テスト</h1>
+        
+        <!-- サーバー状態 -->
+        <div class="test-section">
+            <h2>🏥 サーバー接続確認</h2>
+            <button onclick="checkConnection()">接続テスト</button>
+            <div id="connectionResult" class="result" style="display: none;"></div>
+        </div>
+
+        <!-- 基本ワークフロー -->
+        <div class="test-section">
+            <h2>🎤 基本ワークフロー テスト</h2>
+            <p style="color: #666; margin-bottom: 15px;">
+                実際の支援員さんが使う基本機能をテストします
+            </p>
+            
+            <div class="form-group">
+                <label for="audioFile">面談音声ファイル</label>
+                <input type="file" id="audioFile" accept=".mp3,.wav,.m4a,.aac">
+            </div>
+
+            <button onclick="testBasicWorkflow()">🎯 基本ワークフローテスト</button>
+            <div class="loading" id="workflowLoading">🎵 処理中...</div>
+            <div id="workflowResult" class="result" style="display: none;"></div>
+        </div>
+
+        <!-- 帳票生成テスト -->
+        <div class="test-section">
+            <h2>📋 帳票生成テスト</h2>
+            <p style="color: #666; margin-bottom: 15px;">
+                サンプルデータで帳票生成をテストします
+            </p>
+            
+            <button onclick="testDocumentGeneration()">📄 帳票生成テスト</button>
+            <div class="loading" id="docLoading">📋 生成中...</div>
+            <div id="docResult" class="result" style="display: none;"></div>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE = window.location.port === '3000' ? window.location.origin : 'http://localhost:3000';
+        
+        // 接続テスト
+        async function checkConnection() {
+            try {
+                const response = await fetch(`${API_BASE}/api/health`);
+                const data = await response.json();
+                
+                const statusDiv = document.createElement('div');
+                statusDiv.className = `status ${data.status === 'OK' || data.status === 'WARNING' ? 'healthy' : 'warning'}`;
+                statusDiv.innerHTML = `
+                    <strong>サーバー状態:</strong> ${data.status}<br>
+                    <strong>APIキー設定:</strong> ${data.openai_configured && data.anthropic_configured ? '✅ 完了' : '⚠️ 未設定 (デモモード)'}<br>
+                    <strong>メッセージ:</strong> ${data.message || '正常'}
+                `;
+                
+                const resultDiv = document.getElementById('connectionResult');
+                resultDiv.innerHTML = '';
+                resultDiv.appendChild(statusDiv);
+                resultDiv.style.display = 'block';
+                
+            } catch (error) {
+                showResult('connectionResult', { error: error.message }, false);
+            }
+        }
+
+        // 基本ワークフロー テスト
+        async function testBasicWorkflow() {
+            const fileInput = document.getElementById('audioFile');
+            if (!fileInput.files[0]) {
+                alert('音声ファイルを選択してください');
+                return;
+            }
+
+            showLoading('workflowLoading');
+
+            try {
+                // Step 1: 音声アップロード & 文字起こし
+                const formData = new FormData();
+                formData.append('audioFile', fileInput.files[0]);
+
+                const response = await fetch(`${API_BASE}/api/audio/upload-and-transcribe`, {
+                    method: 'POST',
+                    body: formData
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok) {
+                    const result = {
+                        success: true,
+                        message: '✅ 基本ワークフロー成功！',
+                        steps: {
+                            '1_アップロード': '✅ 完了',
+                            '2_文字起こし': '✅ 完了',
+                            '3_文字数': `${data.transcription.text.length}文字`,
+                            '4_処理時間': `${data.transcription.duration}秒`
+                        },
+                        transcription_preview: data.transcription.text.substring(0, 200) + '...',
+                        next_step: '👉 この文字起こし結果を使って帳票生成が可能です'
+                    };
+                    showResult('workflowResult', result, true);
+                } else {
+                    showResult('workflowResult', data, false);
+                }
+
+            } catch (error) {
+                showResult('workflowResult', { error: error.message }, false);
+            } finally {
+                hideLoading('workflowLoading');
+            }
+        }
+
+        // 帳票生成テスト
+        async function testDocumentGeneration() {
+            showLoading('docLoading');
+
+            try {
+                const sampleData = {
+                    userName: "田中花子",
+                    staffName: "佐藤支援員",
+                    transcriptionText: "本日は個別支援計画の見直し面談を実施しました。利用者様のパソコン作業スキルが向上し、集中時間も1時間程度継続できるようになりました。"
+                };
+
+                const response = await fetch(`${API_BASE}/api/pdf/individual-support-plan`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(sampleData)
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok) {
+                    const result = {
+                        success: true,
+                        message: '✅ 帳票生成成功！',
+                        generated_document: '個別支援計画書',
+                        filename: data.filename,
+                        download_link: `${API_BASE}/generated/${data.filename}`,
+                        note: '👆 上記リンクから実際の帳票PDFをダウンロードできます'
+                    };
+                    showResult('docResult', result, true);
+                    
+                    // PDFリンクを追加
+                    if (data.filename) {
+                        const linkElement = document.createElement('a');
+                        linkElement.href = `${API_BASE}/generated/${data.filename}`;
+                        linkElement.target = '_blank';
+                        linkElement.textContent = '📥 PDFをダウンロード';
+                        linkElement.style.cssText = 'display: block; margin: 10px 0; padding: 10px; background: #67b279; color: white; text-decoration: none; border-radius: 5px; text-align: center;';
+                        
+                        const resultDiv = document.getElementById('docResult');
+                        resultDiv.appendChild(linkElement);
+                    }
+                } else {
+                    showResult('docResult', data, false);
+                }
+
+            } catch (error) {
+                showResult('docResult', { error: error.message }, false);
+            } finally {
+                hideLoading('docLoading');
+            }
+        }
+
+        // ユーティリティ関数
+        function showLoading(elementId) {
+            document.getElementById(elementId).style.display = 'block';
+        }
+
+        function hideLoading(elementId) {
+            document.getElementById(elementId).style.display = 'none';
+        }
+
+        function showResult(elementId, data, isSuccess) {
+            const element = document.getElementById(elementId);
+            element.style.display = 'block';
+            element.className = `result ${isSuccess ? 'success' : 'error'}`;
+            element.textContent = JSON.stringify(data, null, 2);
+        }
+
+        // ページ読み込み時に接続確認
+        window.addEventListener('load', () => {
+            checkConnection();
+        });
+    </script>
+</body>
+</html>

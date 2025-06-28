@@ -1,0 +1,1182 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Support-docs API テスト</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            background: white;
+            border-radius: 12px;
+            padding: 30px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            margin-bottom: 20px;
+        }
+        h1 {
+            color: #2c3e50;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        h2 {
+            color: #34495e;
+            border-bottom: 2px solid #3498db;
+            padding-bottom: 10px;
+        }
+        .test-section {
+            margin-bottom: 30px;
+            padding: 20px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            background-color: #fafafa;
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+            color: #555;
+        }
+        input[type="file"],
+        input[type="text"],
+        textarea,
+        select {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 14px;
+        }
+        textarea {
+            height: 80px;
+            resize: vertical;
+        }
+        button {
+            background-color: #3498db;
+            color: white;
+            padding: 12px 24px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            margin-right: 10px;
+            margin-bottom: 10px;
+        }
+        button:hover {
+            background-color: #2980b9;
+        }
+        button:disabled {
+            background-color: #bdc3c7;
+            cursor: not-allowed;
+        }
+        .result {
+            margin-top: 20px;
+            padding: 15px;
+            border-radius: 4px;
+            white-space: pre-wrap;
+            font-family: monospace;
+            font-size: 12px;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+        .success { background-color: #d4edda; border: 1px solid #c3e6cb; color: #155724; }
+        .error { background-color: #f8d7da; border: 1px solid #f5c6cb; color: #721c24; }
+        .info { background-color: #d1ecf1; border: 1px solid #bee5eb; color: #0c5460; }
+        .loading {
+            display: none;
+            text-align: center;
+            color: #666;
+            font-style: italic;
+        }
+        .status-indicator {
+            display: inline-block;
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            margin-right: 8px;
+        }
+        .status-online { background-color: #27ae60; }
+        .status-offline { background-color: #e74c3c; }
+        .tabs {
+            display: flex;
+            margin-bottom: 20px;
+            border-bottom: 1px solid #ddd;
+        }
+        .tab {
+            padding: 10px 20px;
+            cursor: pointer;
+            border-bottom: 2px solid transparent;
+        }
+        .tab.active {
+            border-bottom-color: #3498db;
+            background-color: #ecf0f1;
+        }
+        .tab-content {
+            display: none;
+        }
+        .tab-content.active {
+            display: block;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🎤 Support-docs API テストツール</h1>
+        
+        <!-- サーバー状態確認 -->
+        <div class="test-section">
+            <h2>🏥 サーバー状態確認</h2>
+            <button onclick="checkServerHealth()">ヘルスチェック実行</button>
+            <div id="healthResult" class="result info" style="display: none;"></div>
+        </div>
+
+        <!-- タブ切り替え -->
+        <div class="tabs">
+            <div class="tab active" onclick="switchTab('audio')">音声認識テスト</div>
+            <div class="tab" onclick="switchTab('pdf')">PDF生成テスト</div>
+            <div class="tab" onclick="switchTab('accuracy')">精度測定テスト</div>
+            <div class="tab" onclick="switchTab('documents')">📋 複数帳票生成</div>
+            <div class="tab" onclick="switchTab('database')">🗃️ データベース入力</div>
+            <div class="tab" onclick="switchTab('integrated')">🎯 統合テスト</div>
+        </div>
+
+        <!-- 音声認識テスト -->
+        <div id="audioTab" class="tab-content active">
+            <div class="test-section">
+                <h2>🎤 音声認識テスト</h2>
+                
+                <div class="form-group">
+                    <label for="audioFile">音声ファイル (.mp3, .wav, .m4a, .aac)</label>
+                    <input type="file" id="audioFile" accept=".mp3,.wav,.m4a,.aac">
+                </div>
+                
+                <div class="form-group">
+                    <label for="promptType">プロンプトタイプ</label>
+                    <select id="promptType">
+                        <option value="WELFARE">福祉面談（デフォルト）</option>
+                        <option value="ASSESSMENT">アセスメント面談</option>
+                        <option value="MONITORING">モニタリング面談</option>
+                    </select>
+                </div>
+
+                <button onclick="uploadOnly()">アップロードのみ</button>
+                <button onclick="testUpload()" style="background-color: #f39c12;">🧪 接続テスト (APIキー不要)</button>
+                <button onclick="demoTranscribe()" style="background-color: #9b59b6;">🎬 デモ文字起こし (APIキー不要)</button>
+                <button onclick="uploadAndTranscribe()">アップロード + 音声認識 (APIキー必要)</button>
+                <button onclick="uploadTranscribeAnalyze()">アップロード + 音声認識 + AI解析 (APIキー必要)</button>
+                
+                <div class="loading" id="audioLoading">🎵 処理中...</div>
+                <div id="audioResult" class="result" style="display: none;"></div>
+            </div>
+        </div>
+
+        <!-- PDF生成テスト -->
+        <div id="pdfTab" class="tab-content">
+            <div class="test-section">
+                <h2>📄 PDF生成テスト</h2>
+                
+                <div class="form-group">
+                    <label for="pdfType">PDF種類</label>
+                    <select id="pdfType">
+                        <option value="assessment-sheet">アセスメント表</option>
+                        <option value="interview-record">面談記録</option>
+                        <option value="service-record">サービス提供実績記録表</option>
+                        <option value="individual-support-plan">個別支援計画書</option>
+                        <option value="monitoring-record">モニタリング記録表</option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label for="userName">利用者名</label>
+                    <input type="text" id="userName" placeholder="田中太郎" value="田中太郎">
+                </div>
+                
+                <div class="form-group">
+                    <label for="staffName">支援員名</label>
+                    <input type="text" id="staffName" placeholder="佐藤支援員" value="佐藤支援員">
+                </div>
+                
+                <div class="form-group">
+                    <label for="transcriptionText">音声認識テキスト（面談記録用）</label>
+                    <textarea id="transcriptionText" placeholder="音声認識結果がここに入力されます...">今日は個別面談を実施します。現在の就労状況についてお聞かせください。</textarea>
+                </div>
+
+                <button onclick="generatePDF()">PDF生成実行</button>
+                
+                <div class="loading" id="pdfLoading">📄 PDF生成中...</div>
+                <div id="pdfResult" class="result" style="display: none;"></div>
+            </div>
+        </div>
+
+        <!-- 精度測定テスト -->
+        <div id="accuracyTab" class="tab-content">
+            <div class="test-section">
+                <h2>📊 精度測定テスト</h2>
+                
+                <div class="form-group">
+                    <label for="testAudioFile">テスト音声ファイル</label>
+                    <input type="file" id="testAudioFile" accept=".mp3,.wav,.m4a,.aac">
+                </div>
+                
+                <div class="form-group">
+                    <label for="groundTruth">正解テキスト（手動入力）</label>
+                    <textarea id="groundTruth" placeholder="音声ファイルの正しい内容をここに入力してください..."></textarea>
+                </div>
+
+                <button onclick="measureAccuracy()">精度測定実行</button>
+                
+                <div class="loading" id="accuracyLoading">📊 精度測定中...</div>
+                <div id="accuracyResult" class="result" style="display: none;"></div>
+            </div>
+        </div>
+
+        <!-- 複数帳票生成テスト -->
+        <div id="documentsTab" class="tab-content">
+            <div class="test-section">
+                <h2>📋 複数帳票同時生成テスト</h2>
+                
+                <div class="form-group">
+                    <label for="documentsAudioFile">音声ファイル (.mp3, .wav, .m4a, .aac)</label>
+                    <input type="file" id="documentsAudioFile" accept=".mp3,.wav,.m4a,.aac">
+                </div>
+                
+                <div class="form-group">
+                    <label for="documentsUserName">利用者名</label>
+                    <input type="text" id="documentsUserName" placeholder="田中太郎" value="田中太郎">
+                </div>
+                
+                <div class="form-group">
+                    <label for="documentsStaffName">支援員名</label>
+                    <input type="text" id="documentsStaffName" placeholder="佐藤支援員" value="佐藤支援員">
+                </div>
+
+                <div class="form-group">
+                    <label>📋 生成する帳票を選択してください</label>
+                    <div style="margin-top: 10px;">
+                        <label style="display: flex; align-items: center; margin-bottom: 8px; font-weight: normal;">
+                            <input type="checkbox" id="doc_individual_support_plan" value="individual-support-plan" style="margin-right: 8px;">
+                            個別支援計画書 - 支援目標と具体的な支援内容
+                        </label>
+                        <label style="display: flex; align-items: center; margin-bottom: 8px; font-weight: normal;">
+                            <input type="checkbox" id="doc_monitoring_record" value="monitoring-record" style="margin-right: 8px;">
+                            モニタリング記録表 - 支援計画の進捗状況と評価
+                        </label>
+                        <label style="display: flex; align-items: center; margin-bottom: 8px; font-weight: normal;">
+                            <input type="checkbox" id="doc_family_report" value="family-report" style="margin-right: 8px;">
+                            家族向け報告書 - 活動報告と近況お知らせ
+                        </label>
+                        <label style="display: flex; align-items: center; margin-bottom: 8px; font-weight: normal;">
+                            <input type="checkbox" id="doc_service_record" value="service-record" style="margin-right: 8px;">
+                            サービス提供実績記録表 - 提供サービスの詳細記録
+                        </label>
+                        <label style="display: flex; align-items: center; margin-bottom: 8px; font-weight: normal;">
+                            <input type="checkbox" id="doc_assessment_sheet" value="assessment-sheet" style="margin-right: 8px;">
+                            アセスメント表 - 能力評価と課題分析
+                        </label>
+                    </div>
+                </div>
+
+                <div style="margin-bottom: 15px;">
+                    <button onclick="suggestDocuments()" style="background-color: #9b59b6;">🤖 AI推奨帳票を提案</button>
+                    <button onclick="previewDocumentGeneration()" style="background-color: #f39c12;">👁️ 生成プレビュー</button>
+                    <button onclick="generateMultipleDocuments()" style="background-color: #27ae60;">📄 選択帳票を一括生成</button>
+                </div>
+
+                <div class="loading" id="documentsLoading">📋 帳票生成中...</div>
+                <div id="documentsResult" class="result" style="display: none;"></div>
+            </div>
+        </div>
+
+        <!-- データベース自動入力テスト -->
+        <div id="databaseTab" class="tab-content">
+            <div class="test-section">
+                <h2>🗃️ データベース自動入力テスト</h2>
+                
+                <div class="form-group">
+                    <label for="databaseAudioFile">音声ファイル (.mp3, .wav, .m4a, .aac)</label>
+                    <input type="file" id="databaseAudioFile" accept=".mp3,.wav,.m4a,.aac">
+                </div>
+                
+                <div class="form-group">
+                    <label for="databaseUserName">利用者名</label>
+                    <input type="text" id="databaseUserName" placeholder="田中太郎" value="田中太郎">
+                </div>
+                
+                <div class="form-group">
+                    <label for="databaseStaffName">支援員名</label>
+                    <input type="text" id="databaseStaffName" placeholder="佐藤支援員" value="佐藤支援員">
+                </div>
+
+                <div class="form-group">
+                    <label>🗃️ 更新するテーブルを選択してください</label>
+                    <div style="margin-top: 10px;">
+                        <label style="display: flex; align-items: center; margin-bottom: 8px; font-weight: normal;">
+                            <input type="checkbox" id="table_user_master" value="user_master" style="margin-right: 8px;">
+                            利用者マスタ - 年齢、障害種別、支援区分、連絡先、医療情報
+                        </label>
+                        <label style="display: flex; align-items: center; margin-bottom: 8px; font-weight: normal;">
+                            <input type="checkbox" id="table_service_records" value="service_records" style="margin-right: 8px;">
+                            サービス提供実績 - サービス種別、提供時間、利用者状態、活動内容
+                        </label>
+                        <label style="display: flex; align-items: center; margin-bottom: 8px; font-weight: normal;">
+                            <input type="checkbox" id="table_goal_evaluations" value="goal_evaluations" style="margin-right: 8px;">
+                            目標達成度評価 - 目標カテゴリ、達成度、評価内容、次の目標
+                        </label>
+                        <label style="display: flex; align-items: center; margin-bottom: 8px; font-weight: normal;">
+                            <input type="checkbox" id="table_attendance_records" value="attendance_records" style="margin-right: 8px;">
+                            出席記録 - 出席状況、参加度、欠席理由、早退・遅刻
+                        </label>
+                        <label style="display: flex; align-items: center; margin-bottom: 8px; font-weight: normal;">
+                            <input type="checkbox" id="table_communication_logs" value="communication_logs" style="margin-right: 8px;">
+                            コミュニケーション記録 - 連絡先、連絡内容、連絡日時、対応者
+                        </label>
+                        <label style="display: flex; align-items: center; margin-bottom: 8px; font-weight: normal;">
+                            <input type="checkbox" id="table_medical_records" value="medical_records" style="margin-right: 8px;">
+                            医療・健康記録 - 服薬情報、通院状況、健康状態、医療機関
+                        </label>
+                    </div>
+                </div>
+
+                <div style="margin-bottom: 15px;">
+                    <button onclick="suggestTables()" style="background-color: #9b59b6;">🤖 AI推奨テーブルを提案</button>
+                    <button onclick="previewDatabaseUpdate()" style="background-color: #f39c12;">👁️ 更新プレビュー</button>
+                    <button onclick="updateDatabase()" style="background-color: #e74c3c;">💾 選択テーブルを一括更新</button>
+                </div>
+
+                <div class="loading" id="databaseLoading">🗃️ データベース更新中...</div>
+                <div id="databaseResult" class="result" style="display: none;"></div>
+            </div>
+        </div>
+
+        <!-- 統合テスト -->
+        <div id="integratedTab" class="tab-content">
+            <div class="test-section">
+                <h2>🎯 統合テスト - ワンクリック完全自動化</h2>
+                <p style="color: #666; margin-bottom: 20px;">
+                    1回の音声ファイルから複数帳票生成とデータベース更新を同時実行し、<br>
+                    <strong>従来125分の作業を6分に短縮</strong>する完全自動化をテストします。
+                </p>
+                
+                <div class="form-group">
+                    <label for="integratedAudioFile">音声ファイル (.mp3, .wav, .m4a, .aac)</label>
+                    <input type="file" id="integratedAudioFile" accept=".mp3,.wav,.m4a,.aac">
+                </div>
+                
+                <div class="form-group">
+                    <label for="integratedUserName">利用者名</label>
+                    <input type="text" id="integratedUserName" placeholder="田中太郎" value="田中太郎">
+                </div>
+                
+                <div class="form-group">
+                    <label for="integratedStaffName">支援員名</label>
+                    <input type="text" id="integratedStaffName" placeholder="佐藤支援員" value="佐藤支援員">
+                </div>
+
+                <div style="background-color: #e8f5e8; padding: 15px; border-radius: 8px; margin: 20px 0;">
+                    <h3 style="color: #27ae60; margin-top: 0;">🚀 ワンクリック処理内容</h3>
+                    <ul style="margin: 10px 0; color: #555;">
+                        <li>✅ 音声認識（精度向上プロンプト + 前処理適用）</li>
+                        <li>✅ AI推奨帳票の自動選択・生成</li>
+                        <li>✅ AI推奨テーブルの自動選択・更新</li>
+                        <li>✅ 処理時間・ROI効果の計測</li>
+                    </ul>
+                </div>
+
+                <div style="margin-bottom: 15px;">
+                    <button onclick="executeIntegratedProcess()" style="background-color: #2ecc71; font-size: 18px; padding: 15px 30px;">
+                        🎯 完全自動化実行 (125分→6分)
+                    </button>
+                </div>
+
+                <div class="loading" id="integratedLoading">🎯 完全自動化処理中...</div>
+                <div id="integratedResult" class="result" style="display: none;"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // サーバーポートを自動検出または3000をデフォルトに
+        const API_BASE = window.location.port === '3000' ? window.location.origin : 'http://localhost:3000';
+
+        // タブ切り替え
+        function switchTab(tabName) {
+            // タブボタンの更新
+            document.querySelectorAll('.tab').forEach(tab => tab.classList.remove('active'));
+            event.target.classList.add('active');
+            
+            // コンテンツの更新
+            document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
+            document.getElementById(tabName + 'Tab').classList.add('active');
+        }
+
+        // サーバーヘルスチェック
+        async function checkServerHealth() {
+            try {
+                const response = await fetch(`${API_BASE}/api/health`);
+                const data = await response.json();
+                
+                document.getElementById('healthResult').style.display = 'block';
+                document.getElementById('healthResult').className = 'result success';
+                document.getElementById('healthResult').textContent = JSON.stringify(data, null, 2);
+            } catch (error) {
+                document.getElementById('healthResult').style.display = 'block';
+                document.getElementById('healthResult').className = 'result error';
+                document.getElementById('healthResult').textContent = `エラー: ${error.message}`;
+            }
+        }
+
+        // 音声アップロードのみ
+        async function uploadOnly() {
+            const fileInput = document.getElementById('audioFile');
+            if (!fileInput.files[0]) {
+                alert('音声ファイルを選択してください');
+                return;
+            }
+
+            const formData = new FormData();
+            formData.append('audioFile', fileInput.files[0]);
+
+            showLoading('audioLoading');
+            
+            try {
+                const response = await fetch(`${API_BASE}/api/audio/upload`, {
+                    method: 'POST',
+                    body: formData
+                });
+                
+                const data = await response.json();
+                showResult('audioResult', data, response.ok);
+            } catch (error) {
+                showResult('audioResult', { error: error.message }, false);
+            } finally {
+                hideLoading('audioLoading');
+            }
+        }
+
+        // 音声認識
+        async function uploadAndTranscribe() {
+            const fileInput = document.getElementById('audioFile');
+            if (!fileInput.files[0]) {
+                alert('音声ファイルを選択してください');
+                return;
+            }
+
+            const formData = new FormData();
+            formData.append('audioFile', fileInput.files[0]);
+
+            showLoading('audioLoading');
+            
+            try {
+                const response = await fetch(`${API_BASE}/api/audio/upload-and-transcribe`, {
+                    method: 'POST',
+                    body: formData
+                });
+                
+                const data = await response.json();
+                showResult('audioResult', data, response.ok);
+                
+                // 成功時は結果をPDFタブにコピー
+                if (response.ok && data.transcription) {
+                    document.getElementById('transcriptionText').value = data.transcription.text;
+                }
+            } catch (error) {
+                showResult('audioResult', { error: error.message }, false);
+            } finally {
+                hideLoading('audioLoading');
+            }
+        }
+
+        // テスト用アップロード (APIキー不要)
+        async function testUpload() {
+            const fileInput = document.getElementById('audioFile');
+            if (!fileInput.files[0]) {
+                alert('音声ファイルを選択してください');
+                return;
+            }
+
+            const formData = new FormData();
+            formData.append('audioFile', fileInput.files[0]);
+
+            showLoading('audioLoading');
+            
+            try {
+                const response = await fetch(`${API_BASE}/api/audio/test-upload`, {
+                    method: 'POST',
+                    body: formData
+                });
+                
+                const data = await response.json();
+                showResult('audioResult', data, response.ok);
+            } catch (error) {
+                showResult('audioResult', { error: error.message }, false);
+            } finally {
+                hideLoading('audioLoading');
+            }
+        }
+
+        // デモ用文字起こし (APIキー不要)
+        async function demoTranscribe() {
+            const fileInput = document.getElementById('audioFile');
+            if (!fileInput.files[0]) {
+                alert('音声ファイルを選択してください');
+                return;
+            }
+
+            const formData = new FormData();
+            formData.append('audioFile', fileInput.files[0]);
+
+            showLoading('audioLoading');
+            
+            try {
+                const response = await fetch(`${API_BASE}/api/audio/demo-transcribe`, {
+                    method: 'POST',
+                    body: formData
+                });
+                
+                const data = await response.json();
+                showResult('audioResult', data, response.ok);
+                
+                // 成功時は結果をPDFタブにコピー
+                if (response.ok && data.transcription) {
+                    document.getElementById('transcriptionText').value = data.transcription.text;
+                }
+            } catch (error) {
+                showResult('audioResult', { error: error.message }, false);
+            } finally {
+                hideLoading('audioLoading');
+            }
+        }
+
+        // AI解析付き音声認識
+        async function uploadTranscribeAnalyze() {
+            const fileInput = document.getElementById('audioFile');
+            if (!fileInput.files[0]) {
+                alert('音声ファイルを選択してください');
+                return;
+            }
+
+            const formData = new FormData();
+            formData.append('audioFile', fileInput.files[0]);
+
+            showLoading('audioLoading');
+            
+            try {
+                const response = await fetch(`${API_BASE}/api/audio/upload-transcribe-analyze`, {
+                    method: 'POST',
+                    body: formData
+                });
+                
+                const data = await response.json();
+                showResult('audioResult', data, response.ok);
+                
+                // 成功時は結果をPDFタブにコピー
+                if (response.ok && data.transcription) {
+                    document.getElementById('transcriptionText').value = data.transcription.text;
+                }
+            } catch (error) {
+                showResult('audioResult', { error: error.message }, false);
+            } finally {
+                hideLoading('audioLoading');
+            }
+        }
+
+        // PDF生成
+        async function generatePDF() {
+            const pdfType = document.getElementById('pdfType').value;
+            const userName = document.getElementById('userName').value;
+            const staffName = document.getElementById('staffName').value;
+            const transcriptionText = document.getElementById('transcriptionText').value;
+
+            if (!userName) {
+                alert('利用者名を入力してください');
+                return;
+            }
+
+            const requestData = {
+                userName: userName,
+                staffName: staffName,
+                transcriptionText: transcriptionText,
+                age: '25',
+                disabilityType: '精神障害',
+                assessor: staffName
+            };
+
+            showLoading('pdfLoading');
+            
+            try {
+                const response = await fetch(`${API_BASE}/api/pdf/${pdfType}`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(requestData)
+                });
+                
+                const data = await response.json();
+                showResult('pdfResult', data, response.ok);
+                
+                // 成功時はPDFリンクを表示
+                if (response.ok && data.filename) {
+                    const pdfLink = `${API_BASE}/generated/${data.filename}`;
+                    const linkElement = document.createElement('a');
+                    linkElement.href = pdfLink;
+                    linkElement.target = '_blank';
+                    linkElement.textContent = 'PDFを開く';
+                    linkElement.style.display = 'block';
+                    linkElement.style.marginTop = '10px';
+                    linkElement.style.color = '#3498db';
+                    
+                    const resultDiv = document.getElementById('pdfResult');
+                    resultDiv.appendChild(linkElement);
+                }
+            } catch (error) {
+                showResult('pdfResult', { error: error.message }, false);
+            } finally {
+                hideLoading('pdfLoading');
+            }
+        }
+
+        // 精度測定（デモ版）
+        async function measureAccuracy() {
+            const fileInput = document.getElementById('testAudioFile');
+            const groundTruth = document.getElementById('groundTruth').value;
+            
+            if (!fileInput.files[0]) {
+                alert('テスト音声ファイルを選択してください');
+                return;
+            }
+            
+            if (!groundTruth.trim()) {
+                alert('正解テキストを入力してください');
+                return;
+            }
+
+            showLoading('accuracyLoading');
+            
+            try {
+                // まず音声認識を実行
+                const formData = new FormData();
+                formData.append('audioFile', fileInput.files[0]);
+
+                const response = await fetch(`${API_BASE}/api/audio/upload-and-transcribe`, {
+                    method: 'POST',
+                    body: formData
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok && data.transcription) {
+                    // 簡易精度計算（実際の精度測定APIは別途実装）
+                    const predicted = data.transcription.text;
+                    const actual = groundTruth.trim();
+                    
+                    const accuracy = calculateSimpleAccuracy(predicted, actual);
+                    
+                    const result = {
+                        ...data,
+                        accuracy: accuracy,
+                        comparison: {
+                            predicted: predicted,
+                            actual: actual
+                        }
+                    };
+                    
+                    showResult('accuracyResult', result, true);
+                } else {
+                    showResult('accuracyResult', data, false);
+                }
+            } catch (error) {
+                showResult('accuracyResult', { error: error.message }, false);
+            } finally {
+                hideLoading('accuracyLoading');
+            }
+        }
+
+        // 簡易精度計算
+        function calculateSimpleAccuracy(predicted, actual) {
+            const predictedWords = predicted.toLowerCase().split(/\s+/);
+            const actualWords = actual.toLowerCase().split(/\s+/);
+            
+            let correct = 0;
+            const maxLength = Math.max(predictedWords.length, actualWords.length);
+            
+            for (let i = 0; i < Math.min(predictedWords.length, actualWords.length); i++) {
+                if (predictedWords[i] === actualWords[i]) {
+                    correct++;
+                }
+            }
+            
+            return {
+                wordAccuracy: maxLength > 0 ? (correct / maxLength) * 100 : 0,
+                characterAccuracy: calculateCharacterAccuracy(predicted, actual)
+            };
+        }
+
+        function calculateCharacterAccuracy(predicted, actual) {
+            const predictedChars = predicted.replace(/\s/g, '').split('');
+            const actualChars = actual.replace(/\s/g, '').split('');
+            
+            let correct = 0;
+            const maxLength = Math.max(predictedChars.length, actualChars.length);
+            
+            for (let i = 0; i < Math.min(predictedChars.length, actualChars.length); i++) {
+                if (predictedChars[i] === actualChars[i]) {
+                    correct++;
+                }
+            }
+            
+            return maxLength > 0 ? (correct / maxLength) * 100 : 0;
+        }
+
+        // ユーティリティ関数
+        function showLoading(elementId) {
+            document.getElementById(elementId).style.display = 'block';
+        }
+
+        function hideLoading(elementId) {
+            document.getElementById(elementId).style.display = 'none';
+        }
+
+        function showResult(elementId, data, isSuccess) {
+            const element = document.getElementById(elementId);
+            element.style.display = 'block';
+            element.className = `result ${isSuccess ? 'success' : 'error'}`;
+            element.textContent = JSON.stringify(data, null, 2);
+        }
+
+        // ===== 複数帳票生成機能 =====
+
+        // AI推奨帳票を提案
+        async function suggestDocuments() {
+            const transcriptionText = document.getElementById('transcriptionText')?.value || 
+                                    '障害福祉面談を実施しました。目標設定について話し合い、モニタリングを行いました。';
+
+            try {
+                const response = await fetch(`${API_BASE}/api/documents/suggest`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        transcriptionText: transcriptionText,
+                        userContext: {}
+                    })
+                });
+
+                const data = await response.json();
+                
+                if (data.success) {
+                    // 推奨された帳票を自動選択
+                    document.querySelectorAll('input[id^="doc_"]').forEach(checkbox => {
+                        checkbox.checked = false;
+                    });
+                    
+                    data.suggestions.forEach(suggestion => {
+                        const checkbox = document.getElementById(`doc_${suggestion.type.replace(/-/g, '_')}`);
+                        if (checkbox) {
+                            checkbox.checked = true;
+                        }
+                    });
+
+                    showResult('documentsResult', {
+                        message: '推奨帳票を自動選択しました',
+                        suggestions: data.suggestions
+                    }, true);
+                } else {
+                    showResult('documentsResult', data, false);
+                }
+            } catch (error) {
+                showResult('documentsResult', { error: error.message }, false);
+            }
+        }
+
+        // 帳票生成プレビュー
+        async function previewDocumentGeneration() {
+            const selectedDocs = getSelectedDocuments();
+            const userName = document.getElementById('documentsUserName').value;
+            const staffName = document.getElementById('documentsStaffName').value;
+
+            if (selectedDocs.length === 0) {
+                alert('生成する帳票を選択してください');
+                return;
+            }
+
+            const transcriptionText = document.getElementById('transcriptionText')?.value || 
+                                    'サンプル面談記録: 利用者との面談を実施し、今後の支援について話し合いました。';
+
+            try {
+                const response = await fetch(`${API_BASE}/api/documents/preview`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        transcriptionText: transcriptionText,
+                        selectedDocuments: selectedDocs,
+                        userName: userName,
+                        staffName: staffName
+                    })
+                });
+
+                const data = await response.json();
+                showResult('documentsResult', data, response.ok);
+            } catch (error) {
+                showResult('documentsResult', { error: error.message }, false);
+            }
+        }
+
+        // 複数帳票を生成
+        async function generateMultipleDocuments() {
+            const fileInput = document.getElementById('documentsAudioFile');
+            const selectedDocs = getSelectedDocuments();
+            const userName = document.getElementById('documentsUserName').value;
+            const staffName = document.getElementById('documentsStaffName').value;
+
+            if (!fileInput.files[0]) {
+                alert('音声ファイルを選択してください');
+                return;
+            }
+
+            if (selectedDocs.length === 0) {
+                alert('生成する帳票を選択してください');
+                return;
+            }
+
+            const formData = new FormData();
+            formData.append('audioFile', fileInput.files[0]);
+            formData.append('selectedDocuments', JSON.stringify(selectedDocs));
+            formData.append('userName', userName);
+            formData.append('staffName', staffName);
+
+            showLoading('documentsLoading');
+
+            try {
+                const response = await fetch(`${API_BASE}/api/documents/generate-multiple-from-audio`, {
+                    method: 'POST',
+                    body: formData
+                });
+
+                const data = await response.json();
+                showResult('documentsResult', data, response.ok);
+            } catch (error) {
+                showResult('documentsResult', { error: error.message }, false);
+            } finally {
+                hideLoading('documentsLoading');
+            }
+        }
+
+        function getSelectedDocuments() {
+            const selected = [];
+            document.querySelectorAll('input[id^="doc_"]:checked').forEach(checkbox => {
+                selected.push(checkbox.value);
+            });
+            return selected;
+        }
+
+        // ===== データベース自動入力機能 =====
+
+        // AI推奨テーブルを提案
+        async function suggestTables() {
+            const transcriptionText = document.getElementById('transcriptionText')?.value || 
+                                    '25歳の利用者、精神障害、サービス提供実績を記録。目標達成度は良好。';
+
+            try {
+                const response = await fetch(`${API_BASE}/api/database/suggest-tables`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        transcriptionText: transcriptionText,
+                        userContext: {}
+                    })
+                });
+
+                const data = await response.json();
+                
+                if (data.success) {
+                    // 推奨されたテーブルを自動選択
+                    document.querySelectorAll('input[id^="table_"]').forEach(checkbox => {
+                        checkbox.checked = false;
+                    });
+                    
+                    data.suggestions.forEach(suggestion => {
+                        const checkbox = document.getElementById(`table_${suggestion.table}`);
+                        if (checkbox) {
+                            checkbox.checked = true;
+                        }
+                    });
+
+                    showResult('databaseResult', {
+                        message: '推奨テーブルを自動選択しました',
+                        suggestions: data.suggestions
+                    }, true);
+                } else {
+                    showResult('databaseResult', data, false);
+                }
+            } catch (error) {
+                showResult('databaseResult', { error: error.message }, false);
+            }
+        }
+
+        // データベース更新プレビュー
+        async function previewDatabaseUpdate() {
+            const selectedTables = getSelectedTables();
+            const userName = document.getElementById('databaseUserName').value;
+            const staffName = document.getElementById('databaseStaffName').value;
+
+            if (selectedTables.length === 0) {
+                alert('更新するテーブルを選択してください');
+                return;
+            }
+
+            const transcriptionText = document.getElementById('transcriptionText')?.value || 
+                                    '25歳、精神障害、今日はサービス提供を実施。目標達成度は良好でした。';
+
+            try {
+                const response = await fetch(`${API_BASE}/api/database/preview-update`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        transcriptionText: transcriptionText,
+                        targetTables: selectedTables,
+                        userName: userName,
+                        staffName: staffName
+                    })
+                });
+
+                const data = await response.json();
+                showResult('databaseResult', data, response.ok);
+            } catch (error) {
+                showResult('databaseResult', { error: error.message }, false);
+            }
+        }
+
+        // データベースを更新
+        async function updateDatabase() {
+            const fileInput = document.getElementById('databaseAudioFile');
+            const selectedTables = getSelectedTables();
+            const userName = document.getElementById('databaseUserName').value;
+            const staffName = document.getElementById('databaseStaffName').value;
+
+            if (!fileInput.files[0]) {
+                alert('音声ファイルを選択してください');
+                return;
+            }
+
+            if (selectedTables.length === 0) {
+                alert('更新するテーブルを選択してください');
+                return;
+            }
+
+            const formData = new FormData();
+            formData.append('audioFile', fileInput.files[0]);
+            formData.append('targetTables', JSON.stringify(selectedTables));
+            formData.append('userName', userName);
+            formData.append('staffName', staffName);
+
+            showLoading('databaseLoading');
+
+            try {
+                const response = await fetch(`${API_BASE}/api/database/process-audio`, {
+                    method: 'POST',
+                    body: formData
+                });
+
+                const data = await response.json();
+                showResult('databaseResult', data, response.ok);
+            } catch (error) {
+                showResult('databaseResult', { error: error.message }, false);
+            } finally {
+                hideLoading('databaseLoading');
+            }
+        }
+
+        function getSelectedTables() {
+            const selected = [];
+            document.querySelectorAll('input[id^="table_"]:checked').forEach(checkbox => {
+                selected.push(checkbox.value);
+            });
+            return selected;
+        }
+
+        // ===== 統合テスト機能 =====
+
+        // 完全自動化実行
+        async function executeIntegratedProcess() {
+            const fileInput = document.getElementById('integratedAudioFile');
+            const userName = document.getElementById('integratedUserName').value;
+            const staffName = document.getElementById('integratedStaffName').value;
+
+            if (!fileInput.files[0]) {
+                alert('音声ファイルを選択してください');
+                return;
+            }
+
+            showLoading('integratedLoading');
+            const startTime = Date.now();
+
+            try {
+                // Step 1: 音声認識
+                const transcriptionResult = await performTranscription(fileInput.files[0]);
+                
+                // Step 2: AI推奨の取得
+                const suggestions = await getAISuggestions(transcriptionResult.transcription.text);
+                
+                // Step 3: 複数帳票生成
+                const documentsResult = await generateRecommendedDocuments(
+                    fileInput.files[0], suggestions.documents, userName, staffName
+                );
+                
+                // Step 4: データベース更新
+                const databaseResult = await updateRecommendedTables(
+                    fileInput.files[0], suggestions.tables, userName, staffName
+                );
+
+                const endTime = Date.now();
+                const processingTime = (endTime - startTime) / 1000;
+
+                const result = {
+                    success: true,
+                    message: `🎉 完全自動化が完了しました！`,
+                    processingTime: `${processingTime.toFixed(1)}秒`,
+                    timeSavings: `従来125分 → 自動化${processingTime.toFixed(1)}秒 = ${(7500 - processingTime).toFixed(1)}秒短縮`,
+                    costSavings: `人件費削減効果: 約${Math.round((7500 - processingTime) / 60 * 50)}円`,
+                    transcription: transcriptionResult,
+                    documentsGenerated: documentsResult.generationResult?.generatedCount || 0,
+                    tablesUpdated: databaseResult.databaseResult?.updatedTables || 0,
+                    details: {
+                        documents: documentsResult,
+                        database: databaseResult
+                    }
+                };
+
+                showResult('integratedResult', result, true);
+
+            } catch (error) {
+                const endTime = Date.now();
+                const processingTime = (endTime - startTime) / 1000;
+                
+                showResult('integratedResult', {
+                    success: false,
+                    message: '統合処理中にエラーが発生しました',
+                    processingTime: `${processingTime.toFixed(1)}秒`,
+                    error: error.message
+                }, false);
+            } finally {
+                hideLoading('integratedLoading');
+            }
+        }
+
+        async function performTranscription(audioFile) {
+            const formData = new FormData();
+            formData.append('audioFile', audioFile);
+            
+            const response = await fetch(`${API_BASE}/api/audio/upload-and-transcribe`, {
+                method: 'POST',
+                body: formData
+            });
+            
+            return await response.json();
+        }
+
+        async function getAISuggestions(transcriptionText) {
+            const [docSuggestions, tableSuggestions] = await Promise.all([
+                fetch(`${API_BASE}/api/documents/suggest`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ transcriptionText })
+                }).then(res => res.json()),
+                
+                fetch(`${API_BASE}/api/database/suggest-tables`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ transcriptionText })
+                }).then(res => res.json())
+            ]);
+
+            return {
+                documents: docSuggestions.suggestions?.map(s => s.type) || ['individual-support-plan'],
+                tables: tableSuggestions.originalSuggestions || ['user_master', 'service_records']
+            };
+        }
+
+        async function generateRecommendedDocuments(audioFile, documentTypes, userName, staffName) {
+            const formData = new FormData();
+            formData.append('audioFile', audioFile);
+            formData.append('selectedDocuments', JSON.stringify(documentTypes));
+            formData.append('userName', userName);
+            formData.append('staffName', staffName);
+
+            const response = await fetch(`${API_BASE}/api/documents/generate-multiple-from-audio`, {
+                method: 'POST',
+                body: formData
+            });
+
+            return await response.json();
+        }
+
+        async function updateRecommendedTables(audioFile, tableNames, userName, staffName) {
+            const formData = new FormData();
+            formData.append('audioFile', audioFile);
+            formData.append('targetTables', JSON.stringify(tableNames));
+            formData.append('userName', userName);
+            formData.append('staffName', staffName);
+
+            const response = await fetch(`${API_BASE}/api/database/process-audio`, {
+                method: 'POST',
+                body: formData
+            });
+
+            return await response.json();
+        }
+
+        // API設定状況の確認と表示
+        async function checkApiConfiguration() {
+            try {
+                const response = await fetch(`${API_BASE}/api/health`);
+                const data = await response.json();
+                
+                // API設定状況を表示
+                const configInfo = document.createElement('div');
+                configInfo.style.cssText = 'background: #e8f4fd; padding: 15px; border-radius: 8px; margin: 10px 0; border-left: 4px solid #3498db;';
+                
+                const hasApiKeys = data.openai_configured && data.anthropic_configured;
+                
+                configInfo.innerHTML = `
+                    <h3 style="margin: 0 0 10px 0; color: #2c3e50;">🔧 API設定状況</h3>
+                    <p style="margin: 5px 0;">OpenAI API: ${data.openai_configured ? '✅ 設定済み' : '❌ 未設定'}</p>
+                    <p style="margin: 5px 0;">Anthropic API: ${data.anthropic_configured ? '✅ 設定済み' : '❌ 未設定'}</p>
+                    <p style="margin: 10px 0 5px 0; font-weight: bold; color: ${hasApiKeys ? '#27ae60' : '#e74c3c'};">                    
+                        ${hasApiKeys ? 
+                          '🎉 全機能が利用可能です！' : 
+                          '⚠️ デモ機能のみ利用可能 - 実際の音声認識にはAPIキーが必要です'}
+                    </p>
+                    ${!hasApiKeys ? '<p style="margin: 5px 0; font-size: 14px; color: #666;">APIキー設定方法は <a href="#" onclick="alert(\'README.mdまたはAPI_TEST_TROUBLESHOOTING.mdを参照してください\');">トラブルシューティングガイド</a> を参照</p>' : ''}
+                `;
+                
+                document.querySelector('.container').insertBefore(configInfo, document.querySelector('.tabs'));
+                
+            } catch (error) {
+                console.warn('API configuration check failed:', error);
+            }
+        }
+
+        // ページ読み込み時にヘルスチェック実行
+        window.addEventListener('load', () => {
+            checkServerHealth();
+            checkApiConfiguration();
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,23 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(find:*)",
+      "Bash(ls:*)",
+      "Bash(npm install)",
+      "Bash(npm start)",
+      "Bash(cat:*)",
+      "Bash(curl:*)",
+      "WebFetch(domain:calculator.aws)",
+      "Bash(node:*)",
+      "WebFetch(domain:tokita-fukushi.com)",
+      "WebFetch(domain:www.nivr.jeed.go.jp)",
+      "Bash(grep:*)",
+      "Bash(npx puppeteer browsers:*)",
+      "Bash(killall:*)",
+      "Bash(rg:*)",
+      "Bash(ss:*)",
+      "WebFetch(domain:kabe-nashi.jp)"
+    ],
+    "deny": []
+  }
+}

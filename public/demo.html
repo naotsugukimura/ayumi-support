@@ -1,0 +1,1136 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SupportDocs - 無料デモ体験</title>
+    <meta name="description" content="実際の障害福祉面談音声から帳票とデータベース入力が自動化される様子をご体験ください。">
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Noto Sans JP', sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background-color: #f8f9fa;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        /* Header */
+        .demo-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 2rem 0;
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+
+        .demo-header h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 1rem;
+        }
+
+        .demo-header p {
+            font-size: 1.2rem;
+            opacity: 0.9;
+        }
+
+        /* Progress Bar */
+        .progress-container {
+            background: white;
+            padding: 1.5rem;
+            border-radius: 12px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            margin-bottom: 2rem;
+        }
+
+        .progress-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: relative;
+        }
+
+        .progress-step {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            position: relative;
+            z-index: 2;
+        }
+
+        .step-circle {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            background: #e0e0e0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            color: #666;
+            margin-bottom: 0.5rem;
+        }
+
+        .step-circle.active {
+            background: #4caf50;
+            color: white;
+        }
+
+        .step-circle.completed {
+            background: #2196f3;
+            color: white;
+        }
+
+        .step-label {
+            font-weight: 600;
+            text-align: center;
+            font-size: 0.9rem;
+        }
+
+        .progress-line {
+            position: absolute;
+            top: 25px;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: #e0e0e0;
+            z-index: 1;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: #2196f3;
+            width: 0%;
+            transition: width 0.5s ease;
+        }
+
+        /* Demo Content */
+        .demo-content {
+            display: grid;
+            grid-template-columns: 1fr 400px;
+            gap: 2rem;
+        }
+
+        .main-demo {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+
+        .demo-section {
+            display: none;
+            padding: 2rem;
+        }
+
+        .demo-section.active {
+            display: block;
+        }
+
+        .section-title {
+            font-size: 1.8rem;
+            font-weight: 700;
+            margin-bottom: 1.5rem;
+            color: #2c3e50;
+        }
+
+        .file-upload-area {
+            border: 2px dashed #ddd;
+            border-radius: 12px;
+            padding: 3rem;
+            text-align: center;
+            background: #fafafa;
+            transition: all 0.3s;
+            margin-bottom: 2rem;
+        }
+
+        .file-upload-area:hover {
+            border-color: #667eea;
+            background: #f0f8ff;
+        }
+
+        .file-upload-area.dragover {
+            border-color: #667eea;
+            background: #e3f2fd;
+        }
+
+        .upload-icon {
+            font-size: 3rem;
+            color: #667eea;
+            margin-bottom: 1rem;
+        }
+
+        .sample-files {
+            display: flex;
+            gap: 1rem;
+            margin-top: 1rem;
+            justify-content: center;
+        }
+
+        .sample-file {
+            background: #667eea;
+            color: white;
+            padding: 0.8rem 1.5rem;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: background 0.3s;
+        }
+
+        .sample-file:hover {
+            background: #5a67d8;
+        }
+
+        .user-info {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+
+        .form-group {
+            margin-bottom: 1rem;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 600;
+            color: #555;
+        }
+
+        .form-group input {
+            width: 100%;
+            padding: 0.8rem;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            font-size: 1rem;
+        }
+
+        .checkbox-group {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 0.8rem;
+            margin: 1.5rem 0;
+        }
+
+        .checkbox-item {
+            display: flex;
+            align-items: center;
+            padding: 0.8rem;
+            background: #f8f9fa;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+
+        .checkbox-item:hover {
+            background: #e9ecef;
+        }
+
+        .checkbox-item input[type="checkbox"] {
+            margin-right: 0.8rem;
+            transform: scale(1.2);
+        }
+
+        .recommended-badge {
+            background: #ff6b6b;
+            color: white;
+            font-size: 0.7rem;
+            padding: 0.2rem 0.5rem;
+            border-radius: 10px;
+            margin-left: 0.5rem;
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: 1rem;
+            margin-top: 2rem;
+        }
+
+        .btn {
+            padding: 1rem 2rem;
+            border: none;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .btn-primary {
+            background: #667eea;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #5a67d8;
+            transform: translateY(-2px);
+        }
+
+        .btn-secondary {
+            background: #f39c12;
+            color: white;
+        }
+
+        .btn-secondary:hover {
+            background: #e67e22;
+        }
+
+        .btn-success {
+            background: #4caf50;
+            color: white;
+            font-size: 1.2rem;
+            padding: 1.2rem 2.5rem;
+        }
+
+        .btn-success:hover {
+            background: #45a049;
+        }
+
+        /* Sidebar */
+        .demo-sidebar {
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+        }
+
+        .roi-widget {
+            background: white;
+            padding: 1.5rem;
+            border-radius: 12px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        .widget-title {
+            font-size: 1.2rem;
+            font-weight: 700;
+            margin-bottom: 1rem;
+            color: #2c3e50;
+        }
+
+        .roi-metric {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0.8rem 0;
+            border-bottom: 1px solid #eee;
+        }
+
+        .roi-metric:last-child {
+            border-bottom: none;
+            font-weight: 700;
+            color: #4caf50;
+        }
+
+        .metric-value {
+            font-weight: 600;
+            color: #2c3e50;
+        }
+
+        .timer-widget {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            text-align: center;
+        }
+
+        .timer-display {
+            font-size: 3rem;
+            font-weight: 700;
+            margin: 1rem 0;
+        }
+
+        .timer-comparison {
+            background: rgba(255,255,255,0.1);
+            padding: 1rem;
+            border-radius: 8px;
+            margin-top: 1rem;
+        }
+
+        .guide-widget {
+            background: #e8f5e8;
+            border-left: 4px solid #4caf50;
+        }
+
+        .guide-step {
+            display: flex;
+            align-items: center;
+            margin-bottom: 0.8rem;
+            padding: 0.5rem;
+            border-radius: 6px;
+        }
+
+        .guide-step.active {
+            background: rgba(76, 175, 80, 0.1);
+        }
+
+        .step-number {
+            background: #4caf50;
+            color: white;
+            width: 25px;
+            height: 25px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 0.8rem;
+            font-weight: bold;
+            font-size: 0.9rem;
+        }
+
+        /* Results Display */
+        .results-container {
+            display: none;
+            grid-template-columns: 1fr 1fr;
+            gap: 2rem;
+            margin-top: 2rem;
+        }
+
+        .results-container.show {
+            display: grid;
+        }
+
+        .result-panel {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+
+        .panel-header {
+            background: #f8f9fa;
+            padding: 1rem 1.5rem;
+            font-weight: 700;
+            border-bottom: 1px solid #eee;
+        }
+
+        .panel-content {
+            padding: 1.5rem;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+
+        .generated-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0.8rem;
+            background: #f8f9fa;
+            border-radius: 8px;
+            margin-bottom: 0.8rem;
+        }
+
+        .download-btn {
+            background: #2196f3;
+            color: white;
+            padding: 0.4rem 0.8rem;
+            border: none;
+            border-radius: 4px;
+            font-size: 0.8rem;
+            cursor: pointer;
+        }
+
+        .processing-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.8);
+            z-index: 9999;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .processing-content {
+            background: white;
+            padding: 3rem;
+            border-radius: 12px;
+            text-align: center;
+            max-width: 500px;
+        }
+
+        .processing-spinner {
+            width: 60px;
+            height: 60px;
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #667eea;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 1rem;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .processing-steps {
+            text-align: left;
+            margin-top: 2rem;
+        }
+
+        .processing-step {
+            padding: 0.5rem 0;
+            opacity: 0.5;
+        }
+
+        .processing-step.active {
+            opacity: 1;
+            color: #667eea;
+            font-weight: 600;
+        }
+
+        .processing-step.completed {
+            opacity: 1;
+            color: #4caf50;
+        }
+
+        /* Mobile Responsive */
+        @media (max-width: 1024px) {
+            .demo-content {
+                grid-template-columns: 1fr;
+            }
+            
+            .results-container {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .demo-header h1 {
+                font-size: 2rem;
+            }
+            
+            .user-info {
+                grid-template-columns: 1fr;
+            }
+            
+            .checkbox-group {
+                grid-template-columns: 1fr;
+            }
+            
+            .action-buttons {
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Demo Header -->
+    <div class="demo-header">
+        <div class="container">
+            <h1>🎯 SupportDocs 無料デモ体験</h1>
+            <p>実際の障害福祉面談音声から125分の作業が6分で完了する様子をご体験ください</p>
+        </div>
+    </div>
+
+    <div class="container">
+        <!-- Progress Bar -->
+        <div class="progress-container">
+            <div class="progress-bar">
+                <div class="progress-line">
+                    <div class="progress-fill" id="progressFill"></div>
+                </div>
+                
+                <div class="progress-step">
+                    <div class="step-circle active" id="step1">1</div>
+                    <div class="step-label">音声アップロード</div>
+                </div>
+                
+                <div class="progress-step">
+                    <div class="step-circle" id="step2">2</div>
+                    <div class="step-label">AI推奨選択</div>
+                </div>
+                
+                <div class="progress-step">
+                    <div class="step-circle" id="step3">3</div>
+                    <div class="step-label">自動生成実行</div>
+                </div>
+                
+                <div class="progress-step">
+                    <div class="step-circle" id="step4">4</div>
+                    <div class="step-label">結果確認</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Demo Content -->
+        <div class="demo-content">
+            <!-- Main Demo Area -->
+            <div class="main-demo">
+                <!-- Step 1: File Upload -->
+                <div class="demo-section active" id="section1">
+                    <h2 class="section-title">📁 面談音声をアップロード</h2>
+                    
+                    <div class="file-upload-area" id="uploadArea">
+                        <div class="upload-icon">📁</div>
+                        <h3>面談音声ファイルをドロップまたはクリックして選択</h3>
+                        <p>対応形式: MP3, WAV, M4A, AAC（最大100MB）</p>
+                        <input type="file" id="audioFile" accept=".mp3,.wav,.m4a,.aac" style="display: none;">
+                    </div>
+                    
+                    <div class="sample-files">
+                        <div class="sample-file" onclick="loadSampleFile('assessment')">
+                            📋 アセスメント面談サンプル
+                        </div>
+                        <div class="sample-file" onclick="loadSampleFile('monitoring')">
+                            📊 モニタリング面談サンプル
+                        </div>
+                        <div class="sample-file" onclick="loadSampleFile('consultation')">
+                            💬 相談面談サンプル
+                        </div>
+                    </div>
+                    
+                    <div class="user-info">
+                        <div class="form-group">
+                            <label for="userName">利用者名</label>
+                            <input type="text" id="userName" value="田中太郎" placeholder="利用者名を入力">
+                        </div>
+                        <div class="form-group">
+                            <label for="staffName">支援員名</label>
+                            <input type="text" id="staffName" value="佐藤支援員" placeholder="支援員名を入力">
+                        </div>
+                    </div>
+                    
+                    <div class="action-buttons">
+                        <button class="btn btn-primary" onclick="nextStep()" disabled id="nextBtn1">
+                            次へ：AI推奨を取得 →
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Step 2: AI Recommendations -->
+                <div class="demo-section" id="section2">
+                    <h2 class="section-title">🤖 AI推奨帳票・テーブル選択</h2>
+                    <p style="margin-bottom: 2rem; color: #666;">
+                        面談内容を分析し、必要な帳票とデータベース更新を自動提案しています
+                    </p>
+                    
+                    <h3 style="margin-bottom: 1rem;">📋 生成推奨帳票</h3>
+                    <div class="checkbox-group" id="documentsGroup">
+                        <!-- AI推奨帳票がここに動的追加されます -->
+                    </div>
+                    
+                    <h3 style="margin-bottom: 1rem; margin-top: 2rem;">💾 更新推奨データベース</h3>
+                    <div class="checkbox-group" id="tablesGroup">
+                        <!-- AI推奨テーブルがここに動的追加されます -->
+                    </div>
+                    
+                    <div class="action-buttons">
+                        <button class="btn btn-secondary" onclick="prevStep()">← 戻る</button>
+                        <button class="btn btn-secondary" onclick="getAIRecommendations()">🤖 AI推奨を再取得</button>
+                        <button class="btn btn-primary" onclick="nextStep()">次へ：処理実行 →</button>
+                    </div>
+                </div>
+
+                <!-- Step 3: Execution -->
+                <div class="demo-section" id="section3">
+                    <h2 class="section-title">🚀 完全自動処理の実行</h2>
+                    
+                    <div style="background: #e8f5e8; padding: 1.5rem; border-radius: 12px; margin-bottom: 2rem;">
+                        <h3 style="color: #4caf50; margin-bottom: 1rem;">✨ 実行される処理</h3>
+                        <ul style="color: #333; line-height: 2;">
+                            <li>🎤 高精度音声認識（障害福祉専門プロンプト適用）</li>
+                            <li>📋 選択帳票の同時生成</li>
+                            <li>💾 選択データベースの自動更新</li>
+                            <li>⏱️ 処理時間・ROI効果の測定</li>
+                        </ul>
+                    </div>
+                    
+                    <div style="text-align: center;">
+                        <button class="btn btn-success" onclick="executeDemo()" id="executeBtn">
+                            🎯 完全自動処理を開始 (125分→6分)
+                        </button>
+                    </div>
+                    
+                    <div class="action-buttons">
+                        <button class="btn btn-secondary" onclick="prevStep()">← 戻って選択を変更</button>
+                    </div>
+                </div>
+
+                <!-- Step 4: Results -->
+                <div class="demo-section" id="section4">
+                    <h2 class="section-title">🎉 処理完了 - 結果確認</h2>
+                    
+                    <div class="results-container show">
+                        <div class="result-panel">
+                            <div class="panel-header">📋 生成された帳票</div>
+                            <div class="panel-content" id="generatedDocuments">
+                                <!-- 生成された帳票リストがここに表示されます -->
+                            </div>
+                        </div>
+                        
+                        <div class="result-panel">
+                            <div class="panel-header">💾 更新されたデータベース</div>
+                            <div class="panel-content" id="updatedDatabase">
+                                <!-- 更新されたテーブル情報がここに表示されます -->
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="action-buttons" style="justify-content: center; margin-top: 2rem;">
+                        <button class="btn btn-primary" onclick="restartDemo()">
+                            🔄 もう一度デモを実行
+                        </button>
+                        <button class="btn btn-success" onclick="contactSales()">
+                            💬 導入相談をする
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Sidebar -->
+            <div class="demo-sidebar">
+                <!-- Timer Widget -->
+                <div class="roi-widget timer-widget">
+                    <h3 class="widget-title">⏱️ 処理時間計測</h3>
+                    <div class="timer-display" id="timerDisplay">00:00</div>
+                    <div class="timer-comparison">
+                        <div><strong>従来作業時間:</strong> 125分</div>
+                        <div><strong>自動化時間:</strong> <span id="automatedTime">-</span></div>
+                        <div><strong>短縮効果:</strong> <span id="timeSaved">-</span></div>
+                    </div>
+                </div>
+
+                <!-- ROI Calculator -->
+                <div class="roi-widget">
+                    <h3 class="widget-title">💰 ROI効果試算</h3>
+                    <div id="roiCalculator">
+                        <div class="roi-metric">
+                            <span>月間面談数</span>
+                            <span class="metric-value">20回</span>
+                        </div>
+                        <div class="roi-metric">
+                            <span>従来作業時間</span>
+                            <span class="metric-value">41.7時間</span>
+                        </div>
+                        <div class="roi-metric">
+                            <span>自動化後</span>
+                            <span class="metric-value">2時間</span>
+                        </div>
+                        <div class="roi-metric">
+                            <span>削減時間</span>
+                            <span class="metric-value">39.7時間</span>
+                        </div>
+                        <div class="roi-metric">
+                            <span>月間削減効果</span>
+                            <span class="metric-value">¥59,550</span>
+                        </div>
+                        <div class="roi-metric">
+                            <span>純削減効果</span>
+                            <span class="metric-value">¥9,750/月</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Step Guide -->
+                <div class="roi-widget guide-widget">
+                    <h3 class="widget-title">📋 操作ガイド</h3>
+                    <div id="stepGuide">
+                        <div class="guide-step active">
+                            <div class="step-number">1</div>
+                            <div>面談音声をアップロード</div>
+                        </div>
+                        <div class="guide-step">
+                            <div class="step-number">2</div>
+                            <div>AI推奨の帳票・テーブルを確認</div>
+                        </div>
+                        <div class="guide-step">
+                            <div class="step-number">3</div>
+                            <div>ワンクリックで自動処理実行</div>
+                        </div>
+                        <div class="guide-step">
+                            <div class="step-number">4</div>
+                            <div>生成結果とROI効果を確認</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Processing Overlay -->
+    <div class="processing-overlay" id="processingOverlay">
+        <div class="processing-content">
+            <div class="processing-spinner"></div>
+            <h3>🎯 完全自動処理中...</h3>
+            <p>従来125分の作業を数分で完了します</p>
+            
+            <div class="processing-steps" id="processingSteps">
+                <div class="processing-step active">🎤 音声認識中...</div>
+                <div class="processing-step">🤖 AI内容分析中...</div>
+                <div class="processing-step">📋 帳票生成中...</div>
+                <div class="processing-step">💾 データベース更新中...</div>
+                <div class="processing-step">⏱️ ROI効果計算中...</div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE = window.location.origin;
+        let currentStep = 1;
+        let startTime = 0;
+        let timerInterval;
+        let selectedFile = null;
+        let sampleFileType = null;
+
+        // Initialize demo
+        document.addEventListener('DOMContentLoaded', function() {
+            setupFileUpload();
+            updateProgress();
+        });
+
+        // File upload setup
+        function setupFileUpload() {
+            const uploadArea = document.getElementById('uploadArea');
+            const fileInput = document.getElementById('audioFile');
+
+            uploadArea.addEventListener('click', () => fileInput.click());
+            
+            uploadArea.addEventListener('dragover', (e) => {
+                e.preventDefault();
+                uploadArea.classList.add('dragover');
+            });
+            
+            uploadArea.addEventListener('dragleave', () => {
+                uploadArea.classList.remove('dragover');
+            });
+            
+            uploadArea.addEventListener('drop', (e) => {
+                e.preventDefault();
+                uploadArea.classList.remove('dragover');
+                handleFileSelect(e.dataTransfer.files[0]);
+            });
+
+            fileInput.addEventListener('change', (e) => {
+                handleFileSelect(e.target.files[0]);
+            });
+        }
+
+        function handleFileSelect(file) {
+            if (file) {
+                selectedFile = file;
+                document.getElementById('nextBtn1').disabled = false;
+                document.querySelector('.file-upload-area h3').textContent = `選択されたファイル: ${file.name}`;
+            }
+        }
+
+        function loadSampleFile(type) {
+            sampleFileType = type;
+            selectedFile = { name: `${type}_sample.mp3`, type: 'sample' };
+            document.getElementById('nextBtn1').disabled = false;
+            
+            const titles = {
+                assessment: 'アセスメント面談サンプル',
+                monitoring: 'モニタリング面談サンプル', 
+                consultation: '相談面談サンプル'
+            };
+            
+            document.querySelector('.file-upload-area h3').textContent = `選択されたサンプル: ${titles[type]}`;
+        }
+
+        // Step navigation
+        function nextStep() {
+            if (currentStep < 4) {
+                currentStep++;
+                showStep(currentStep);
+                updateProgress();
+                
+                if (currentStep === 2) {
+                    loadAIRecommendations();
+                }
+            }
+        }
+
+        function prevStep() {
+            if (currentStep > 1) {
+                currentStep--;
+                showStep(currentStep);
+                updateProgress();
+            }
+        }
+
+        function showStep(step) {
+            // Hide all sections
+            document.querySelectorAll('.demo-section').forEach(section => {
+                section.classList.remove('active');
+            });
+            
+            // Show current section
+            document.getElementById(`section${step}`).classList.add('active');
+            
+            // Update guide
+            document.querySelectorAll('.guide-step').forEach((guide, index) => {
+                guide.classList.remove('active');
+                if (index + 1 === step) {
+                    guide.classList.add('active');
+                }
+            });
+        }
+
+        function updateProgress() {
+            const progressFill = document.getElementById('progressFill');
+            const progressPercent = ((currentStep - 1) / 3) * 100;
+            progressFill.style.width = `${progressPercent}%`;
+            
+            // Update step circles
+            for (let i = 1; i <= 4; i++) {
+                const circle = document.getElementById(`step${i}`);
+                circle.classList.remove('active', 'completed');
+                
+                if (i < currentStep) {
+                    circle.classList.add('completed');
+                } else if (i === currentStep) {
+                    circle.classList.add('active');
+                }
+            }
+        }
+
+        // AI Recommendations
+        async function loadAIRecommendations() {
+            const sampleRecommendations = getSampleRecommendations(sampleFileType || 'assessment');
+            
+            // Load document recommendations
+            const documentsGroup = document.getElementById('documentsGroup');
+            documentsGroup.innerHTML = '';
+            
+            sampleRecommendations.documents.forEach(doc => {
+                const item = document.createElement('div');
+                item.className = 'checkbox-item';
+                item.innerHTML = `
+                    <input type="checkbox" checked id="doc_${doc.id}" value="${doc.id}">
+                    <label for="doc_${doc.id}">
+                        ${doc.name} - ${doc.description}
+                        ${doc.recommended ? '<span class="recommended-badge">AI推奨</span>' : ''}
+                    </label>
+                `;
+                documentsGroup.appendChild(item);
+            });
+            
+            // Load table recommendations
+            const tablesGroup = document.getElementById('tablesGroup');
+            tablesGroup.innerHTML = '';
+            
+            sampleRecommendations.tables.forEach(table => {
+                const item = document.createElement('div');
+                item.className = 'checkbox-item';
+                item.innerHTML = `
+                    <input type="checkbox" checked id="table_${table.id}" value="${table.id}">
+                    <label for="table_${table.id}">
+                        ${table.name} - ${table.description}
+                        ${table.recommended ? '<span class="recommended-badge">AI推奨</span>' : ''}
+                    </label>
+                `;
+                tablesGroup.appendChild(item);
+            });
+        }
+
+        function getSampleRecommendations(type) {
+            const recommendations = {
+                assessment: {
+                    documents: [
+                        { id: 'individual_support_plan', name: '個別支援計画書', description: '支援目標と具体的な支援内容', recommended: true },
+                        { id: 'assessment_sheet', name: 'アセスメント表', description: '能力評価と課題分析', recommended: true },
+                        { id: 'family_report', name: '家族向け報告書', description: '活動報告と近況お知らせ', recommended: false }
+                    ],
+                    tables: [
+                        { id: 'user_master', name: '利用者マスタ', description: '年齢、障害種別、支援区分等', recommended: true },
+                        { id: 'goal_evaluations', name: '目標達成度評価', description: '目標カテゴリ、達成度等', recommended: true },
+                        { id: 'service_records', name: 'サービス提供実績', description: 'サービス内容、提供時間等', recommended: false }
+                    ]
+                },
+                monitoring: {
+                    documents: [
+                        { id: 'monitoring_record', name: 'モニタリング記録表', description: '進捗状況と評価', recommended: true },
+                        { id: 'family_report', name: '家族向け報告書', description: '活動報告と近況お知らせ', recommended: true },
+                        { id: 'individual_support_plan', name: '個別支援計画書', description: '計画見直し版', recommended: false }
+                    ],
+                    tables: [
+                        { id: 'goal_evaluations', name: '目標達成度評価', description: '達成度、進捗状況等', recommended: true },
+                        { id: 'service_records', name: 'サービス提供実績', description: 'サービス内容、利用者状態等', recommended: true },
+                        { id: 'communication_logs', name: 'コミュニケーション記録', description: '家族連絡、関係機関連携等', recommended: false }
+                    ]
+                },
+                consultation: {
+                    documents: [
+                        { id: 'family_report', name: '家族向け報告書', description: '相談内容と対応結果', recommended: true },
+                        { id: 'service_record', name: 'サービス提供実績記録表', description: '相談支援の記録', recommended: true },
+                        { id: 'individual_support_plan', name: '個別支援計画書', description: '支援内容調整版', recommended: false }
+                    ],
+                    tables: [
+                        { id: 'communication_logs', name: 'コミュニケーション記録', description: '相談内容、対応記録等', recommended: true },
+                        { id: 'user_master', name: '利用者マスタ', description: '連絡先、状況更新等', recommended: true },
+                        { id: 'service_records', name: 'サービス提供実績', description: '相談支援実績', recommended: false }
+                    ]
+                }
+            };
+            
+            return recommendations[type] || recommendations.assessment;
+        }
+
+        async function getAIRecommendations() {
+            // Simulate AI analysis
+            const overlay = document.getElementById('processingOverlay');
+            overlay.style.display = 'flex';
+            
+            setTimeout(() => {
+                overlay.style.display = 'none';
+                loadAIRecommendations();
+            }, 2000);
+        }
+
+        // Demo execution
+        async function executeDemo() {
+            startTime = Date.now();
+            startTimer();
+            showProcessing();
+            
+            // Simulate processing steps
+            await simulateProcessing();
+            
+            stopTimer();
+            hideProcessing();
+            generateResults();
+            nextStep();
+        }
+
+        function startTimer() {
+            timerInterval = setInterval(() => {
+                const elapsed = Math.floor((Date.now() - startTime) / 1000);
+                const minutes = Math.floor(elapsed / 60);
+                const seconds = elapsed % 60;
+                document.getElementById('timerDisplay').textContent = 
+                    `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+            }, 1000);
+        }
+
+        function stopTimer() {
+            clearInterval(timerInterval);
+            const totalTime = Math.floor((Date.now() - startTime) / 1000);
+            const minutes = Math.floor(totalTime / 60);
+            const seconds = totalTime % 60;
+            
+            document.getElementById('automatedTime').textContent = `${minutes}分${seconds}秒`;
+            document.getElementById('timeSaved').textContent = `${125 - minutes}分${60 - seconds}秒 (${Math.round((1 - totalTime/7500) * 100)}%削減)`;
+        }
+
+        function showProcessing() {
+            document.getElementById('processingOverlay').style.display = 'flex';
+        }
+
+        function hideProcessing() {
+            document.getElementById('processingOverlay').style.display = 'none';
+        }
+
+        async function simulateProcessing() {
+            const steps = document.querySelectorAll('.processing-step');
+            
+            for (let i = 0; i < steps.length; i++) {
+                steps[i].classList.add('active');
+                await new Promise(resolve => setTimeout(resolve, 1000 + Math.random() * 2000));
+                steps[i].classList.remove('active');
+                steps[i].classList.add('completed');
+            }
+        }
+
+        function generateResults() {
+            const selectedDocs = getSelectedDocuments();
+            const selectedTables = getSelectedTables();
+            
+            // Generate documents list
+            const docsContainer = document.getElementById('generatedDocuments');
+            docsContainer.innerHTML = '';
+            
+            selectedDocs.forEach(doc => {
+                const item = document.createElement('div');
+                item.className = 'generated-item';
+                item.innerHTML = `
+                    <span>📄 ${doc.name}</span>
+                    <button class="download-btn" onclick="downloadFile('${doc.id}')">ダウンロード</button>
+                `;
+                docsContainer.appendChild(item);
+            });
+            
+            // Generate database updates list
+            const dbContainer = document.getElementById('updatedDatabase');
+            dbContainer.innerHTML = '';
+            
+            selectedTables.forEach(table => {
+                const item = document.createElement('div');
+                item.className = 'generated-item';
+                item.innerHTML = `
+                    <span>💾 ${table.name} - ${Math.floor(Math.random() * 5) + 1}件更新</span>
+                    <button class="download-btn" onclick="viewDetails('${table.id}')">詳細表示</button>
+                `;
+                dbContainer.appendChild(item);
+            });
+        }
+
+        function getSelectedDocuments() {
+            const selected = [];
+            const checkboxes = document.querySelectorAll('#documentsGroup input[type="checkbox"]:checked');
+            checkboxes.forEach(cb => {
+                const label = document.querySelector(`label[for="${cb.id}"]`);
+                selected.push({
+                    id: cb.value,
+                    name: label.textContent.split(' - ')[0]
+                });
+            });
+            return selected;
+        }
+
+        function getSelectedTables() {
+            const selected = [];
+            const checkboxes = document.querySelectorAll('#tablesGroup input[type="checkbox"]:checked');
+            checkboxes.forEach(cb => {
+                const label = document.querySelector(`label[for="${cb.id}"]`);
+                selected.push({
+                    id: cb.value,
+                    name: label.textContent.split(' - ')[0]
+                });
+            });
+            return selected;
+        }
+
+        // Utility functions
+        function downloadFile(docId) {
+            alert(`📄 ${docId} のダウンロードを開始します。\n\n実際の運用では、生成されたPDFファイルがダウンロードされます。`);
+        }
+
+        function viewDetails(tableId) {
+            alert(`💾 ${tableId} の更新詳細を表示します。\n\n実際の運用では、更新されたデータベース内容の詳細が表示されます。`);
+        }
+
+        function restartDemo() {
+            currentStep = 1;
+            selectedFile = null;
+            sampleFileType = null;
+            document.getElementById('timerDisplay').textContent = '00:00';
+            document.getElementById('automatedTime').textContent = '-';
+            document.getElementById('timeSaved').textContent = '-';
+            document.querySelector('.file-upload-area h3').textContent = '面談音声ファイルをドロップまたはクリックして選択';
+            document.getElementById('nextBtn1').disabled = true;
+            showStep(1);
+            updateProgress();
+        }
+
+        function contactSales() {
+            alert('📞 営業担当より3営業日以内にご連絡させていただきます。\n\n実際の導入相談、料金見積もり、カスタマイズのご相談など、お気軽にお問い合わせください。');
+        }
+    </script>
+</body>
+</html>

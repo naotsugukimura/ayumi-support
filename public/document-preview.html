@@ -1,0 +1,877 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>歩みサポート - 帳票プレビューと編集</title>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Noto Sans JP', sans-serif;
+            background: #f5f7fa;
+            color: #333;
+            font-size: 18px;
+            line-height: 1.7;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #ff9a9e 0%, #fecfef 50%, #fecfef 100%);
+            color: #444;
+            padding: 1rem 0;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        .header-content {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 0 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            font-size: 1.8rem;
+            font-weight: 700;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        .page-title {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #2c3e50;
+            text-align: center;
+        }
+
+        .page-subtitle {
+            font-size: 1.3rem;
+            color: #666;
+            margin-bottom: 2rem;
+            text-align: center;
+        }
+
+        /* タブナビゲーション */
+        .tab-navigation {
+            display: flex;
+            background: white;
+            border-radius: 15px;
+            padding: 0.5rem;
+            margin-bottom: 2rem;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        .tab-button {
+            flex: 1;
+            background: none;
+            border: none;
+            padding: 1rem 1.5rem;
+            font-size: 18px;
+            font-weight: 600;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            color: #666;
+        }
+
+        .tab-button.active {
+            background: #67b279;
+            color: white;
+            box-shadow: 0 2px 10px rgba(103, 178, 121, 0.3);
+        }
+
+        .tab-button:hover {
+            background: #f0f4ff;
+        }
+
+        .tab-button.active:hover {
+            background: #5a9f68;
+        }
+
+        /* タブコンテンツ */
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        /* 帳票プレビューエリア */
+        .document-preview {
+            background: white;
+            border-radius: 15px;
+            padding: 2rem;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            margin-bottom: 2rem;
+        }
+
+        .document-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2rem;
+            padding-bottom: 1rem;
+            border-bottom: 2px solid #f0f0f0;
+        }
+
+        .document-title {
+            font-size: 2rem;
+            font-weight: 700;
+            color: #2c3e50;
+        }
+
+        .edit-toggle {
+            background: #67b279;
+            color: white;
+            border: none;
+            padding: 0.8rem 1.5rem;
+            border-radius: 25px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .edit-toggle:hover {
+            background: #5a9f68;
+            transform: translateY(-2px);
+        }
+
+        .edit-toggle.editing {
+            background: #ff6b6b;
+        }
+
+        .edit-toggle.editing:hover {
+            background: #ee5a52;
+        }
+
+        /* 帳票フォーム */
+        .document-form {
+            display: grid;
+            gap: 2rem;
+        }
+
+        .form-section {
+            background: #f8f9fa;
+            padding: 1.5rem;
+            border-radius: 10px;
+            border-left: 5px solid #67b279;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: #2c3e50;
+            margin-bottom: 1rem;
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 2fr;
+            gap: 1rem;
+            margin-bottom: 1rem;
+            align-items: start;
+        }
+
+        .form-label {
+            font-weight: 600;
+            color: #555;
+            padding: 0.8rem 0;
+        }
+
+        .form-field {
+            background: white;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            padding: 0.8rem;
+            font-size: 16px;
+            transition: border-color 0.3s ease;
+        }
+
+        .form-field:focus {
+            outline: none;
+            border-color: #67b279;
+            box-shadow: 0 0 0 3px rgba(103, 178, 121, 0.1);
+        }
+
+        .form-field[contenteditable="true"] {
+            min-height: 2.5rem;
+            border-color: #67b279;
+            background: #f9fff9;
+        }
+
+        .form-field.readonly {
+            background: #f5f5f5;
+            color: #777;
+            cursor: not-allowed;
+        }
+
+        textarea.form-field {
+            min-height: 100px;
+            resize: vertical;
+        }
+
+        /* アクションボタン */
+        .actions-bar {
+            display: flex;
+            gap: 1rem;
+            justify-content: center;
+            margin-top: 2rem;
+        }
+
+        .btn {
+            background: #67b279;
+            color: white;
+            border: none;
+            padding: 1rem 2rem;
+            border-radius: 25px;
+            font-size: 18px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            min-height: 50px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+        }
+
+        .btn:hover {
+            background: #5a9f68;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(103, 178, 121, 0.4);
+        }
+
+        .btn-secondary {
+            background: #6c757d;
+        }
+
+        .btn-secondary:hover {
+            background: #5a6268;
+        }
+
+        .btn-danger {
+            background: #dc3545;
+        }
+
+        .btn-danger:hover {
+            background: #c82333;
+        }
+
+        .btn-success {
+            background: #28a745;
+        }
+
+        .btn-success:hover {
+            background: #218838;
+        }
+
+        /* 変更通知 */
+        .changes-indicator {
+            position: fixed;
+            top: 100px;
+            right: 20px;
+            background: #ffeaa7;
+            color: #333;
+            padding: 1rem 1.5rem;
+            border-radius: 10px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+            transform: translateX(300px);
+            transition: transform 0.3s ease;
+            z-index: 1000;
+        }
+
+        .changes-indicator.show {
+            transform: translateX(0);
+        }
+
+        /* プレビューリスト */
+        .preview-list {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 2rem;
+        }
+
+        .preview-card {
+            background: white;
+            border-radius: 15px;
+            padding: 1.5rem;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            transition: transform 0.3s ease;
+            cursor: pointer;
+        }
+
+        .preview-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+        }
+
+        .preview-card.selected {
+            border: 3px solid #67b279;
+            background: #f9fff9;
+        }
+
+        .preview-title {
+            font-size: 1.3rem;
+            font-weight: 600;
+            margin-bottom: 1rem;
+            color: #2c3e50;
+        }
+
+        .preview-content {
+            color: #666;
+            font-size: 16px;
+            line-height: 1.6;
+        }
+
+        .preview-status {
+            display: inline-block;
+            padding: 0.3rem 0.8rem;
+            border-radius: 15px;
+            font-size: 14px;
+            font-weight: 600;
+            margin-top: 1rem;
+        }
+
+        .status-draft {
+            background: #fff3cd;
+            color: #856404;
+        }
+
+        .status-editing {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .status-ready {
+            background: #d1ecf1;
+            color: #0c5460;
+        }
+
+        /* レスポンシブ */
+        @media (max-width: 768px) {
+            .container {
+                padding: 1rem;
+            }
+
+            .tab-navigation {
+                flex-direction: column;
+                gap: 0.5rem;
+            }
+
+            .form-row {
+                grid-template-columns: 1fr;
+            }
+
+            .actions-bar {
+                flex-direction: column;
+            }
+
+            .preview-list {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header class="header">
+        <div class="header-content">
+            <div class="logo">🌸 歩みサポート</div>
+            <div>
+                <a href="/workflow" style="color: #444; text-decoration: none; font-weight: 500;">← 面談記録作成に戻る</a>
+            </div>
+        </div>
+    </header>
+
+    <div class="container">
+        <h1 class="page-title">📋 帳票プレビューと編集</h1>
+        <p class="page-subtitle">作成された書類を確認して、必要な修正を行えます</p>
+
+        <!-- タブナビゲーション -->
+        <div class="tab-navigation">
+            <button class="tab-button active" onclick="switchTab('list')">📋 帳票一覧</button>
+            <button class="tab-button" onclick="switchTab('individual')">👤 個別支援計画書</button>
+            <button class="tab-button" onclick="switchTab('monitoring')">📊 モニタリング記録</button>
+            <button class="tab-button" onclick="switchTab('family')">👨‍👩‍👧‍👦 家族報告書</button>
+        </div>
+
+        <!-- 変更通知 -->
+        <div class="changes-indicator" id="changesIndicator">
+            📝 変更が保存されていません
+        </div>
+
+        <!-- タブ1: 帳票一覧 -->
+        <div class="tab-content active" id="tab-list">
+            <div class="preview-list">
+                <div class="preview-card selected" onclick="selectDocument('individual')" id="card-individual">
+                    <div class="preview-title">👤 個別支援計画書</div>
+                    <div class="preview-content">
+                        利用者の基本情報、現在の状況、支援目標、具体的な支援内容を記載した基本となる計画書です。
+                    </div>
+                    <div class="preview-status status-ready">編集可能</div>
+                </div>
+
+                <div class="preview-card" onclick="selectDocument('monitoring')" id="card-monitoring">
+                    <div class="preview-title">📊 モニタリング記録</div>
+                    <div class="preview-content">
+                        支援目標の達成状況、進捗の評価、今後の課題と対応方針を記録します。
+                    </div>
+                    <div class="preview-status status-ready">編集可能</div>
+                </div>
+
+                <div class="preview-card" onclick="selectDocument('family')" id="card-family">
+                    <div class="preview-title">👨‍👩‍👧‍👦 家族報告書</div>
+                    <div class="preview-content">
+                        ご家族向けに、利用者の様子や成長、今後の予定をわかりやすくまとめた報告書です。
+                    </div>
+                    <div class="preview-status status-ready">編集可能</div>
+                </div>
+
+                <div class="preview-card" onclick="selectDocument('service')" id="card-service">
+                    <div class="preview-title">📋 サービス提供記録</div>
+                    <div class="preview-content">
+                        実際に提供したサービス内容、利用者の状況、特記事項を記録します。
+                    </div>
+                    <div class="preview-status status-draft">下書き</div>
+                </div>
+
+                <div class="preview-card" onclick="selectDocument('assessment')" id="card-assessment">
+                    <div class="preview-title">📝 アセスメントシート</div>
+                    <div class="preview-content">
+                        利用者の能力や特性、支援の必要性を総合的に評価したシートです。
+                    </div>
+                    <div class="preview-status status-draft">下書き</div>
+                </div>
+            </div>
+
+            <div class="actions-bar">
+                <button class="btn" onclick="generateAllDocuments()">📄 全ての帳票を生成</button>
+                <button class="btn btn-secondary" onclick="previewPDF()">👁️ PDFプレビュー</button>
+                <button class="btn btn-success" onclick="downloadAll()">📥 すべてダウンロード</button>
+            </div>
+        </div>
+
+        <!-- タブ2: 個別支援計画書 -->
+        <div class="tab-content" id="tab-individual">
+            <div class="document-preview">
+                <div class="document-header">
+                    <h2 class="document-title">👤 個別支援計画書</h2>
+                    <button class="edit-toggle" onclick="toggleEdit('individual')" id="edit-btn-individual">✏️ 編集する</button>
+                </div>
+
+                <div class="document-form" id="form-individual">
+                    <div class="form-section">
+                        <h3 class="section-title">基本情報</h3>
+                        <div class="form-row">
+                            <div class="form-label">利用者名</div>
+                            <div class="form-field readonly" contenteditable="false" id="user-name">田中 花子</div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-label">年齢</div>
+                            <div class="form-field readonly" contenteditable="false" id="user-age">28歳</div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-label">障害種別</div>
+                            <div class="form-field readonly" contenteditable="false" id="disability-type">知的障害</div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-label">作成日</div>
+                            <div class="form-field readonly" contenteditable="false" id="creation-date">2024年6月27日</div>
+                        </div>
+                    </div>
+
+                    <div class="form-section">
+                        <h3 class="section-title">現在の状況</h3>
+                        <div class="form-row">
+                            <div class="form-label">本人の状況</div>
+                            <textarea class="form-field readonly" readonly id="current-situation">最近、パソコンの作業が少しずつできるようになってきました。Excelの基本的な入力作業は問題なくできています。ただ、まだ集中できる時間が短くて、1時間くらいが限界です。</textarea>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-label">本人の希望</div>
+                            <textarea class="form-field readonly" readonly id="user-hopes">コンピューターの作業をもっと上手になりたい。将来的には一般企業で働けるようになりたいと思っています。</textarea>
+                        </div>
+                    </div>
+
+                    <div class="form-section">
+                        <h3 class="section-title">支援目標</h3>
+                        <div class="form-row">
+                            <div class="form-label">長期目標（1年）</div>
+                            <textarea class="form-field readonly" readonly id="long-term-goals">一般企業での就労を目指し、必要なスキルを身につけ、継続して働けるようになる。</textarea>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-label">短期目標（3ヶ月）</div>
+                            <textarea class="form-field readonly" readonly id="short-term-goals">・Excelの関数を使った計算業務への挑戦
+・集中時間を1.5時間まで延長
+・コミュニケーションスキルの向上</textarea>
+                        </div>
+                    </div>
+
+                    <div class="form-section">
+                        <h3 class="section-title">支援内容</h3>
+                        <div class="form-row">
+                            <div class="form-label">具体的支援</div>
+                            <textarea class="form-field readonly" readonly id="support-content">・週3回のパソコン作業訓練
+・集中力向上のための段階的練習
+・職場でのコミュニケーション練習
+・作業環境の調整とサポート</textarea>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-label">評価方法</div>
+                            <textarea class="form-field readonly" readonly id="evaluation-method">月1回の面談で進捗を確認。作業時間、正確性、コミュニケーション能力を段階評価。</textarea>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="actions-bar">
+                    <button class="btn" onclick="saveDocument('individual')">💾 変更を保存</button>
+                    <button class="btn btn-secondary" onclick="resetDocument('individual')">🔄 元に戻す</button>
+                    <button class="btn btn-success" onclick="downloadDocument('individual')">📥 PDFダウンロード</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- タブ3: モニタリング記録 -->
+        <div class="tab-content" id="tab-monitoring">
+            <div class="document-preview">
+                <div class="document-header">
+                    <h2 class="document-title">📊 モニタリング記録</h2>
+                    <button class="edit-toggle" onclick="toggleEdit('monitoring')" id="edit-btn-monitoring">✏️ 編集する</button>
+                </div>
+
+                <div class="document-form" id="form-monitoring">
+                    <div class="form-section">
+                        <h3 class="section-title">モニタリング基本情報</h3>
+                        <div class="form-row">
+                            <div class="form-label">利用者名</div>
+                            <div class="form-field readonly" contenteditable="false">田中 花子</div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-label">モニタリング期間</div>
+                            <div class="form-field readonly" contenteditable="false">2024年3月～2024年6月</div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-label">担当職員</div>
+                            <div class="form-field readonly" contenteditable="false">佐藤 健太</div>
+                        </div>
+                    </div>
+
+                    <div class="form-section">
+                        <h3 class="section-title">目標達成状況</h3>
+                        <div class="form-row">
+                            <div class="form-label">短期目標の達成度</div>
+                            <textarea class="form-field readonly" readonly>・Excelの基本操作：達成（100%）
+・集中時間の延長：部分達成（1時間→1時間30分、目標まであと30分）
+・コミュニケーション：改善中（積極的に質問できるようになった）</textarea>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-label">支援の効果</div>
+                            <textarea class="form-field readonly" readonly>パソコン作業のスキルが大幅に向上し、自信を持って作業に取り組めるようになりました。集中時間も着実に延長されており、目標達成に向けて順調に進んでいます。</textarea>
+                        </div>
+                    </div>
+
+                    <div class="form-section">
+                        <h3 class="section-title">課題と対応</h3>
+                        <div class="form-row">
+                            <div class="form-label">現在の課題</div>
+                            <textarea class="form-field readonly" readonly>・長時間の集中が困難（疲労による作業効率の低下）
+・複雑な計算業務への不安
+・職場環境への適応に関する心配</textarea>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-label">次期支援方針</div>
+                            <textarea class="form-field readonly" readonly>・集中時間の段階的延長（15分刻みで増加）
+・Excel関数の習得支援を強化
+・職場見学や実習の機会を提供</textarea>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="actions-bar">
+                    <button class="btn" onclick="saveDocument('monitoring')">💾 変更を保存</button>
+                    <button class="btn btn-secondary" onclick="resetDocument('monitoring')">🔄 元に戻す</button>
+                    <button class="btn btn-success" onclick="downloadDocument('monitoring')">📥 PDFダウンロード</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- タブ4: 家族報告書 -->
+        <div class="tab-content" id="tab-family">
+            <div class="document-preview">
+                <div class="document-header">
+                    <h2 class="document-title">👨‍👩‍👧‍👦 家族報告書</h2>
+                    <button class="edit-toggle" onclick="toggleEdit('family')" id="edit-btn-family">✏️ 編集する</button>
+                </div>
+
+                <div class="document-form" id="form-family">
+                    <div class="form-section">
+                        <h3 class="section-title">ご家族への報告</h3>
+                        <div class="form-row">
+                            <div class="form-label">利用者名</div>
+                            <div class="form-field readonly" contenteditable="false">田中 花子さん</div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-label">報告期間</div>
+                            <div class="form-field readonly" contenteditable="false">2024年6月</div>
+                        </div>
+                    </div>
+
+                    <div class="form-section">
+                        <h3 class="section-title">今月の様子</h3>
+                        <div class="form-row">
+                            <div class="form-label">成長と変化</div>
+                            <textarea class="form-field readonly" readonly>花子さんは今月も意欲的に訓練に取り組まれました。特にパソコン作業では大きな進歩が見られ、Excelの基本操作を習得されました。集中して作業に取り組む時間も延びており、自信を持って作業されている様子が印象的でした。</textarea>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-label">日常生活での変化</div>
+                            <textarea class="form-field readonly" readonly>作業に対する自信がついたことで、他の活動にも積極的に参加されるようになりました。職員や他の利用者の方とのコミュニケーションも活発になり、明るい表情で過ごされています。</textarea>
+                        </div>
+                    </div>
+
+                    <div class="form-section">
+                        <h3 class="section-title">来月の予定とお願い</h3>
+                        <div class="form-row">
+                            <div class="form-label">来月の活動予定</div>
+                            <textarea class="form-field readonly" readonly>・Excel関数の基礎学習
+・集中時間延長のための訓練継続
+・職場見学の実施（予定）
+・コミュニケーション向上プログラム参加</textarea>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-label">ご家族へのお願い</div>
+                            <textarea class="form-field readonly" readonly>ご家庭でも、花子さんが学んだパソコンスキルを褒めていただき、自信を持って取り組めるよう応援をお願いします。また、何かご心配なことがありましたら、いつでもお気軽にご相談ください。</textarea>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="actions-bar">
+                    <button class="btn" onclick="saveDocument('family')">💾 変更を保存</button>
+                    <button class="btn btn-secondary" onclick="resetDocument('family')">🔄 元に戻す</button>
+                    <button class="btn btn-success" onclick="downloadDocument('family')">📥 PDFダウンロード</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let hasUnsavedChanges = false;
+        let editingStates = {
+            individual: false,
+            monitoring: false,
+            family: false
+        };
+
+        // タブ切り替え
+        function switchTab(tabName) {
+            // すべてのタブを非アクティブに
+            document.querySelectorAll('.tab-button').forEach(btn => btn.classList.remove('active'));
+            document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
+
+            // 選択されたタブをアクティブに
+            event.target.classList.add('active');
+            document.getElementById('tab-' + tabName).classList.add('active');
+
+            // 個別帳票選択時は、該当カードもハイライト
+            if (tabName !== 'list') {
+                selectDocument(tabName);
+            }
+        }
+
+        // 帳票選択
+        function selectDocument(docType) {
+            // すべてのカードの選択を解除
+            document.querySelectorAll('.preview-card').forEach(card => card.classList.remove('selected'));
+            
+            // 選択されたカードをハイライト
+            const selectedCard = document.getElementById('card-' + docType);
+            if (selectedCard) {
+                selectedCard.classList.add('selected');
+            }
+
+            // 対応するタブに切り替え
+            if (docType !== 'service' && docType !== 'assessment') {
+                switchTabProgrammatically(docType);
+            }
+        }
+
+        // プログラムによるタブ切り替え
+        function switchTabProgrammatically(tabName) {
+            document.querySelectorAll('.tab-button').forEach(btn => btn.classList.remove('active'));
+            document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
+
+            // タブボタンを探してアクティブにする
+            const tabButtons = document.querySelectorAll('.tab-button');
+            tabButtons.forEach(btn => {
+                if (btn.onclick && btn.onclick.toString().includes(tabName)) {
+                    btn.classList.add('active');
+                }
+            });
+
+            document.getElementById('tab-' + tabName).classList.add('active');
+        }
+
+        // 編集モード切り替え
+        function toggleEdit(docType) {
+            const isEditing = editingStates[docType];
+            const form = document.getElementById('form-' + docType);
+            const button = document.getElementById('edit-btn-' + docType);
+            
+            if (isEditing) {
+                // 編集モード終了
+                const fields = form.querySelectorAll('.form-field');
+                fields.forEach(field => {
+                    field.classList.add('readonly');
+                    field.removeAttribute('contenteditable');
+                    if (field.tagName === 'TEXTAREA') {
+                        field.readOnly = true;
+                    }
+                });
+                
+                button.innerHTML = '✏️ 編集する';
+                button.classList.remove('editing');
+                editingStates[docType] = false;
+                
+            } else {
+                // 編集モード開始
+                const fields = form.querySelectorAll('.form-field:not([id$="-name"]):not([id$="-age"]):not([id$="-date"])');
+                fields.forEach(field => {
+                    field.classList.remove('readonly');
+                    if (field.tagName === 'TEXTAREA') {
+                        field.readOnly = false;
+                    } else {
+                        field.setAttribute('contenteditable', 'true');
+                    }
+                });
+                
+                button.innerHTML = '👁️ プレビュー';
+                button.classList.add('editing');
+                editingStates[docType] = true;
+            }
+        }
+
+        // 変更検知
+        function detectChanges() {
+            hasUnsavedChanges = true;
+            document.getElementById('changesIndicator').classList.add('show');
+        }
+
+        // 文書保存
+        function saveDocument(docType) {
+            // 保存処理をシミュレート
+            setTimeout(() => {
+                hasUnsavedChanges = false;
+                document.getElementById('changesIndicator').classList.remove('show');
+                
+                // 成功メッセージ
+                showNotification('✅ 保存が完了しました', 'success');
+            }, 1000);
+        }
+
+        // 文書リセット
+        function resetDocument(docType) {
+            if (confirm('変更内容を破棄して元に戻しますか？')) {
+                location.reload(); // 簡単のためページを再読み込み
+            }
+        }
+
+        // 文書ダウンロード
+        function downloadDocument(docType) {
+            showNotification('📥 PDFダウンロードを開始します', 'info');
+        }
+
+        // 全帳票生成
+        function generateAllDocuments() {
+            showNotification('📄 全ての帳票を生成中...', 'info');
+            
+            // 生成状況をシミュレート
+            setTimeout(() => {
+                const cards = document.querySelectorAll('.preview-card');
+                cards.forEach(card => {
+                    const status = card.querySelector('.preview-status');
+                    status.textContent = '編集可能';
+                    status.className = 'preview-status status-ready';
+                });
+                
+                showNotification('✅ 全ての帳票が生成されました', 'success');
+            }, 3000);
+        }
+
+        // PDFプレビュー
+        function previewPDF() {
+            showNotification('👁️ PDFプレビューを表示します', 'info');
+        }
+
+        // 全ダウンロード
+        function downloadAll() {
+            showNotification('📥 全ての帳票をダウンロード中...', 'info');
+        }
+
+        // 通知表示
+        function showNotification(message, type) {
+            const notification = document.createElement('div');
+            notification.style.cssText = `
+                position: fixed;
+                top: 20px;
+                right: 20px;
+                background: ${type === 'success' ? '#d4edda' : type === 'info' ? '#d1ecf1' : '#fff3cd'};
+                color: ${type === 'success' ? '#155724' : type === 'info' ? '#0c5460' : '#856404'};
+                padding: 1rem 1.5rem;
+                border-radius: 10px;
+                box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+                z-index: 10000;
+                font-weight: 600;
+                animation: slideIn 0.3s ease;
+            `;
+            notification.textContent = message;
+            document.body.appendChild(notification);
+
+            setTimeout(() => {
+                notification.style.animation = 'slideOut 0.3s ease';
+                setTimeout(() => notification.remove(), 300);
+            }, 3000);
+        }
+
+        // イベントリスナー設定
+        document.addEventListener('DOMContentLoaded', function() {
+            // 編集可能フィールドの変更検知
+            document.querySelectorAll('.form-field').forEach(field => {
+                field.addEventListener('input', detectChanges);
+            });
+
+            // ページ離脱時の警告
+            window.addEventListener('beforeunload', function(e) {
+                if (hasUnsavedChanges) {
+                    e.preventDefault();
+                    e.returnValue = '';
+                    return '';
+                }
+            });
+        });
+
+        // スタイルシートにアニメーション追加
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes slideIn {
+                from { transform: translateX(100%); opacity: 0; }
+                to { transform: translateX(0); opacity: 1; }
+            }
+            @keyframes slideOut {
+                from { transform: translateX(0); opacity: 1; }
+                to { transform: translateX(100%); opacity: 0; }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>

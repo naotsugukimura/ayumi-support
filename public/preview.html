@@ -1,0 +1,773 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>歩みサポート - 帳票プレビュー</title>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Noto Sans JP', sans-serif;
+            background: #f8f9fa;
+            color: #333;
+            font-size: 18px; /* 40代向けに大きく */
+            line-height: 1.7;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #ff9a9e 0%, #fecfef 50%, #fecfef 100%);
+            color: #444;
+            padding: 1rem 0;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        .header-content {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 0 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            font-size: 1.8rem;
+            font-weight: 700;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 2rem;
+            align-items: center;
+        }
+
+        .nav-link {
+            color: #444;
+            text-decoration: none;
+            font-weight: 500;
+            font-size: 18px;
+            transition: opacity 0.3s;
+        }
+
+        .nav-link:hover {
+            opacity: 0.7;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        .page-title {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #2c3e50;
+            text-align: center;
+        }
+
+        .page-subtitle {
+            font-size: 1.2rem;
+            color: #666;
+            margin-bottom: 2rem;
+            text-align: center;
+        }
+
+        /* プレビューツールバー */
+        .preview-toolbar {
+            background: white;
+            padding: 1rem;
+            border-radius: 15px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            margin-bottom: 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 1rem;
+        }
+
+        .document-selector {
+            display: flex;
+            gap: 1rem;
+            align-items: center;
+        }
+
+        .document-select {
+            padding: 0.8rem 1.2rem;
+            border: 2px solid #ddd;
+            border-radius: 25px;
+            font-size: 16px;
+            background: white;
+            cursor: pointer;
+            min-width: 200px;
+        }
+
+        .document-select:focus {
+            outline: none;
+            border-color: #67b279;
+        }
+
+        .toolbar-actions {
+            display: flex;
+            gap: 1rem;
+        }
+
+        .btn {
+            background: #67b279;
+            color: white;
+            border: none;
+            padding: 1rem 2rem;
+            border-radius: 30px;
+            font-size: 18px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            min-height: 50px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .btn:hover {
+            background: #5a9f68;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(103, 178, 121, 0.4);
+        }
+
+        .btn-secondary {
+            background: #6c757d;
+        }
+
+        .btn-secondary:hover {
+            background: #5a6268;
+        }
+
+        .btn-danger {
+            background: #dc3545;
+        }
+
+        .btn-danger:hover {
+            background: #c82333;
+        }
+
+        /* メインプレビューエリア */
+        .preview-area {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 2rem;
+        }
+
+        .document-preview {
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+
+        .document-header {
+            background: linear-gradient(135deg, #ffeaa7 0%, #fab1a0 100%);
+            padding: 1.5rem;
+            border-bottom: 1px solid #ddd;
+        }
+
+        .document-title {
+            font-size: 1.8rem;
+            font-weight: 700;
+            color: #444;
+            margin-bottom: 0.5rem;
+        }
+
+        .document-meta {
+            font-size: 1rem;
+            color: #666;
+        }
+
+        .document-content {
+            padding: 2rem;
+        }
+
+        /* 編集可能フィールド */
+        .editable-field {
+            background: #f8f9fa;
+            border: 2px dashed #ddd;
+            padding: 1rem;
+            margin: 1rem 0;
+            border-radius: 8px;
+            transition: all 0.3s ease;
+            cursor: text;
+        }
+
+        .editable-field:hover {
+            background: #e9ecef;
+            border-color: #67b279;
+        }
+
+        .editable-field:focus {
+            outline: none;
+            background: white;
+            border-style: solid;
+            border-color: #67b279;
+            box-shadow: 0 0 10px rgba(103, 178, 121, 0.2);
+        }
+
+        .field-label {
+            font-weight: 600;
+            color: #495057;
+            margin-bottom: 0.5rem;
+            display: block;
+        }
+
+        .field-value {
+            min-height: 1.5rem;
+            line-height: 1.6;
+        }
+
+        /* 帳票テンプレート */
+        .form-template {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            padding: 2rem;
+            border-radius: 10px;
+            box-shadow: 0 0 20px rgba(0,0,0,0.1);
+        }
+
+        .form-header {
+            text-align: center;
+            margin-bottom: 2rem;
+            padding-bottom: 1rem;
+            border-bottom: 2px solid #67b279;
+        }
+
+        .form-title {
+            font-size: 2rem;
+            font-weight: 700;
+            color: #2c3e50;
+            margin-bottom: 0.5rem;
+        }
+
+        .form-section {
+            margin-bottom: 2rem;
+        }
+
+        .section-title {
+            font-size: 1.3rem;
+            font-weight: 600;
+            color: #495057;
+            margin-bottom: 1rem;
+            padding: 0.5rem 1rem;
+            background: #e9ecef;
+            border-radius: 5px;
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: 200px 1fr;
+            gap: 1rem;
+            margin-bottom: 1rem;
+            align-items: start;
+        }
+
+        .form-label {
+            font-weight: 600;
+            color: #495057;
+            padding-top: 1rem;
+        }
+
+        .form-value {
+            background: #f8f9fa;
+            border: 1px solid #ddd;
+            padding: 1rem;
+            border-radius: 5px;
+            min-height: 3rem;
+        }
+
+        /* 保存状態インジケーター */
+        .save-indicator {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 1rem 1.5rem;
+            border-radius: 25px;
+            font-weight: 600;
+            font-size: 16px;
+            z-index: 1000;
+            transition: all 0.3s ease;
+        }
+
+        .save-indicator.saving {
+            background: #ffc107;
+            color: #856404;
+        }
+
+        .save-indicator.saved {
+            background: #28a745;
+            color: white;
+        }
+
+        .save-indicator.error {
+            background: #dc3545;
+            color: white;
+        }
+
+        /* レスポンシブ */
+        @media (max-width: 768px) {
+            .container {
+                padding: 1rem;
+            }
+
+            .preview-toolbar {
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            .toolbar-actions {
+                justify-content: center;
+            }
+
+            .form-row {
+                grid-template-columns: 1fr;
+                gap: 0.5rem;
+            }
+
+            .form-label {
+                padding-top: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- ヘッダー -->
+    <header class="header">
+        <div class="header-content">
+            <div class="logo">🌸 歩みサポート</div>
+            <nav class="nav-links">
+                <a href="/" class="nav-link">ホーム</a>
+                <a href="/workflow" class="nav-link">記録作成</a>
+                <a href="/preview" class="nav-link">プレビュー</a>
+                <a href="/dashboard" class="nav-link">管理画面</a>
+            </nav>
+        </div>
+    </header>
+
+    <div class="container">
+        <h1 class="page-title">📋 帳票プレビュー・編集</h1>
+        <p class="page-subtitle">作成された帳票を確認し、必要に応じて編集できます</p>
+
+        <!-- プレビューツールバー -->
+        <div class="preview-toolbar">
+            <div class="document-selector">
+                <label for="documentSelect" style="font-weight: 600;">帳票を選択：</label>
+                <select id="documentSelect" class="document-select">
+                    <option value="individual-support-plan">個別支援計画書</option>
+                    <option value="monitoring-record">モニタリング記録</option>
+                    <option value="family-report">家族報告書</option>
+                    <option value="service-record">サービス提供実績記録</option>
+                    <option value="assessment-sheet">アセスメントシート</option>
+                </select>
+            </div>
+
+            <div class="toolbar-actions">
+                <button class="btn" onclick="saveDocument()">💾 保存</button>
+                <button class="btn btn-secondary" onclick="resetDocument()">🔄 元に戻す</button>
+                <button class="btn btn-danger" onclick="downloadPDF()">📥 PDF出力</button>
+            </div>
+        </div>
+
+        <!-- メインプレビューエリア -->
+        <div class="preview-area">
+            <div class="document-preview">
+                <div class="document-header">
+                    <h2 class="document-title" id="currentDocumentTitle">個別支援計画書</h2>
+                    <div class="document-meta" id="currentDocumentMeta">
+                        作成日: <span id="creationDate">2024年6月27日</span> | 
+                        利用者: <span id="userName">田中花子様</span>
+                    </div>
+                </div>
+
+                <div class="document-content">
+                    <div class="form-template" id="documentTemplate">
+                        <!-- 動的に帳票テンプレートが読み込まれます -->
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 保存状態インジケーター -->
+    <div class="save-indicator" id="saveIndicator" style="display: none;">
+        保存中...
+    </div>
+
+    <script>
+        // 帳票テンプレート定義
+        const documentTemplates = {
+            'individual-support-plan': {
+                title: '個別支援計画書',
+                sections: [
+                    {
+                        title: '基本情報',
+                        fields: [
+                            { label: '利用者名', key: 'user_name', value: '田中花子' },
+                            { label: '生年月日', key: 'birth_date', value: '1990年4月15日' },
+                            { label: '障害種別', key: 'disability_type', value: '知的障害' },
+                            { label: '計画作成日', key: 'plan_date', value: '2024年6月27日' }
+                        ]
+                    },
+                    {
+                        title: '現在の状況',
+                        fields: [
+                            { label: '生活状況', key: 'living_situation', value: 'Excelの基本的な入力作業ができるようになり、集中時間も30分から1時間に延長されている。' },
+                            { label: '課題・困りごと', key: 'challenges', value: '集中時間がまだ短く、1時間程度が限界。より長時間の作業継続が課題。' },
+                            { label: '本人の意向', key: 'user_wishes', value: 'パソコン作業のスキルを向上させ、将来的に一般就労を目指したい。' }
+                        ]
+                    },
+                    {
+                        title: '支援目標',
+                        fields: [
+                            { label: '長期目標', key: 'long_term_goals', value: '一般企業での事務職での就労を目指す' },
+                            { label: '短期目標', key: 'short_term_goals', value: 'Excel関数を使った計算業務に挑戦し、集中時間を1.5時間まで延長する' },
+                            { label: '評価基準', key: 'evaluation_criteria', value: '関数を使った計算作業の正確性と、1.5時間の継続作業達成度' }
+                        ]
+                    },
+                    {
+                        title: '支援内容',
+                        fields: [
+                            { label: '具体的支援方法', key: 'support_methods', value: 'Excel関数の段階的指導、休憩を挟んだ集中力向上訓練、コミュニケーションスキル訓練' },
+                            { label: '支援頻度', key: 'support_frequency', value: '週3回、各2時間' },
+                            { label: '担当者', key: 'staff_in_charge', value: '就労支援員：山田太郎' }
+                        ]
+                    }
+                ]
+            },
+            'monitoring-record': {
+                title: 'モニタリング記録',
+                sections: [
+                    {
+                        title: 'モニタリング情報',
+                        fields: [
+                            { label: 'モニタリング期間', key: 'monitoring_period', value: '2024年4月〜2024年6月' },
+                            { label: '実施日', key: 'implementation_date', value: '2024年6月27日' },
+                            { label: '参加者', key: 'participants', value: '利用者：田中花子様、支援員：山田太郎' }
+                        ]
+                    },
+                    {
+                        title: '目標達成状況',
+                        fields: [
+                            { label: '短期目標の達成度', key: 'short_term_achievement', value: 'Excel基本操作：達成（100%）、集中時間延長：部分達成（60%）' },
+                            { label: '長期目標への進捗', key: 'long_term_progress', value: '就労移行支援利用開始から6ヶ月、着実にスキル向上中' },
+                            { label: '新たな課題', key: 'new_challenges', value: 'より複雑な作業への挑戦、コミュニケーションスキルの向上' }
+                        ]
+                    },
+                    {
+                        title: '今後の計画',
+                        fields: [
+                            { label: '次の目標設定', key: 'next_goals', value: 'Excel関数習得、集中時間1.5時間達成、職場実習参加' },
+                            { label: '支援方針の変更', key: 'support_changes', value: '個別指導の時間を増やし、実践的な課題に取り組む' },
+                            { label: '次回モニタリング予定', key: 'next_monitoring', value: '2024年9月末予定' }
+                        ]
+                    }
+                ]
+            },
+            'family-report': {
+                title: '家族報告書',
+                sections: [
+                    {
+                        title: '報告期間',
+                        fields: [
+                            { label: '報告期間', key: 'report_period', value: '2024年4月〜2024年6月' },
+                            { label: '報告作成日', key: 'report_date', value: '2024年6月27日' },
+                            { label: 'ご家族', key: 'family_members', value: '田中花子様のお母様' }
+                        ]
+                    },
+                    {
+                        title: '活動の様子',
+                        fields: [
+                            { label: 'サービス利用状況', key: 'service_usage', value: '週3回、規則正しく通所されています。遅刻や欠席もほとんどなく、意欲的に取り組まれています。' },
+                            { label: '成長・変化', key: 'growth_changes', value: 'パソコン操作が格段に上達し、自信を持って作業に取り組む姿が見られます。集中力も向上しています。' },
+                            { label: '日常生活', key: 'daily_life', value: '自宅でも簡単な作業の練習を継続され、生活リズムも安定しています。' }
+                        ]
+                    },
+                    {
+                        title: 'ご家族へのメッセージ',
+                        fields: [
+                            { label: '今月の頑張り', key: 'monthly_efforts', value: '花子様は毎日一生懸命頑張っておられます。特にExcel操作の習得に熱心に取り組まれています。' },
+                            { label: 'ご家族へのお願い', key: 'family_request', value: '引き続き、ご家庭での練習とサポートをお願いいたします。自信につながるお声がけをお願いします。' },
+                            { label: '来月の予定', key: 'next_month_plan', value: 'より実践的な事務作業にチャレンジし、職場実習の準備を進めていきます。' }
+                        ]
+                    }
+                ]
+            },
+            'service-record': {
+                title: 'サービス提供実績記録',
+                sections: [
+                    {
+                        title: 'サービス基本情報',
+                        fields: [
+                            { label: 'サービス種別', key: 'service_type', value: '就労移行支援' },
+                            { label: '提供日', key: 'service_date', value: '2024年6月27日' },
+                            { label: '利用時間', key: 'usage_time', value: '10:00〜15:00（4時間）' },
+                            { label: '担当職員', key: 'staff_name', value: '山田太郎' }
+                        ]
+                    },
+                    {
+                        title: '提供したサービス内容',
+                        fields: [
+                            { label: '主な活動', key: 'main_activities', value: 'Excel関数の学習、データ入力作業、集中力向上訓練' },
+                            { label: '個別支援', key: 'individual_support', value: 'VLOOKUP関数の使い方指導、実践的な計算課題への取り組み' },
+                            { label: '集団活動', key: 'group_activities', value: 'チームでの資料作成、発表練習' }
+                        ]
+                    },
+                    {
+                        title: '利用者の状況',
+                        fields: [
+                            { label: '参加状況', key: 'participation_status', value: '積極的に参加、集中して取り組む' },
+                            { label: '体調・気分', key: 'condition_mood', value: '良好、意欲的' },
+                            { label: '特記事項', key: 'special_notes', value: '新しい関数にも挑戦的に取り組み、理解度が高い' }
+                        ]
+                    }
+                ]
+            },
+            'assessment-sheet': {
+                title: 'アセスメントシート',
+                sections: [
+                    {
+                        title: 'アセスメント基本情報',
+                        fields: [
+                            { label: '実施日', key: 'assessment_date', value: '2024年6月27日' },
+                            { label: '実施者', key: 'assessor', value: '就労支援員：山田太郎' },
+                            { label: 'アセスメント目的', key: 'assessment_purpose', value: '3ヶ月間の成長確認と次期目標設定' }
+                        ]
+                    },
+                    {
+                        title: '機能・能力評価',
+                        fields: [
+                            { label: '認知機能', key: 'cognitive_function', value: '理解力：良好、記憶力：良好、注意力：向上中' },
+                            { label: '作業能力', key: 'work_ability', value: 'パソコン操作：上達、継続性：向上、正確性：良好' },
+                            { label: '社会性', key: 'social_skills', value: 'コミュニケーション：良好、協調性：良好、自主性：向上' }
+                        ]
+                    },
+                    {
+                        title: '総合評価',
+                        fields: [
+                            { label: '強み・長所', key: 'strengths', value: '学習意欲が高く、新しいことにも積極的に取り組む。責任感がある。' },
+                            { label: '改善点・課題', key: 'improvement_areas', value: '集中時間の延長、より複雑な作業への適応' },
+                            { label: '推奨事項', key: 'recommendations', value: '段階的な難易度向上、実習機会の提供、自信向上のサポート' }
+                        ]
+                    }
+                ]
+            }
+        };
+
+        let currentData = {};
+        let originalData = {};
+
+        // ページ読み込み時の初期化
+        document.addEventListener('DOMContentLoaded', function() {
+            loadDocument('individual-support-plan');
+            
+            // 帳票選択イベント
+            document.getElementById('documentSelect').addEventListener('change', function() {
+                loadDocument(this.value);
+            });
+        });
+
+        // 帳票読み込み
+        function loadDocument(documentType) {
+            const template = documentTemplates[documentType];
+            if (!template) return;
+
+            // タイトル更新
+            document.getElementById('currentDocumentTitle').textContent = template.title;
+            
+            // テンプレート生成
+            const templateHtml = generateTemplate(template);
+            document.getElementById('documentTemplate').innerHTML = templateHtml;
+
+            // データ初期化
+            currentData = {};
+            originalData = {};
+            template.sections.forEach(section => {
+                section.fields.forEach(field => {
+                    currentData[field.key] = field.value;
+                    originalData[field.key] = field.value;
+                });
+            });
+
+            // 編集イベント設定
+            setupEditableFields();
+        }
+
+        // テンプレートHTML生成
+        function generateTemplate(template) {
+            let html = `
+                <div class="form-header">
+                    <h3 class="form-title">${template.title}</h3>
+                    <div class="form-meta">作成日: ${new Date().toLocaleDateString('ja-JP')}</div>
+                </div>
+            `;
+
+            template.sections.forEach(section => {
+                html += `
+                    <div class="form-section">
+                        <h4 class="section-title">${section.title}</h4>
+                `;
+
+                section.fields.forEach(field => {
+                    html += `
+                        <div class="form-row">
+                            <div class="form-label">${field.label}</div>
+                            <div class="form-value editable-field" 
+                                 contenteditable="true" 
+                                 data-key="${field.key}"
+                                 data-original="${field.value}">
+                                ${field.value}
+                            </div>
+                        </div>
+                    `;
+                });
+
+                html += `</div>`;
+            });
+
+            return html;
+        }
+
+        // 編集可能フィールドの設定
+        function setupEditableFields() {
+            document.querySelectorAll('.editable-field').forEach(field => {
+                field.addEventListener('input', function() {
+                    const key = this.dataset.key;
+                    currentData[key] = this.textContent;
+                    showSaveIndicator('saving');
+                    
+                    // 自動保存（3秒後）
+                    clearTimeout(window.autoSaveTimeout);
+                    window.autoSaveTimeout = setTimeout(() => {
+                        autoSave();
+                    }, 3000);
+                });
+
+                field.addEventListener('blur', function() {
+                    autoSave();
+                });
+            });
+        }
+
+        // 自動保存
+        function autoSave() {
+            // 実際のAPIコールはここに実装
+            console.log('Auto-saving data:', currentData);
+            showSaveIndicator('saved');
+        }
+
+        // 保存インジケーター表示
+        function showSaveIndicator(status) {
+            const indicator = document.getElementById('saveIndicator');
+            indicator.style.display = 'block';
+            
+            indicator.className = `save-indicator ${status}`;
+            
+            switch(status) {
+                case 'saving':
+                    indicator.textContent = '💾 保存中...';
+                    break;
+                case 'saved':
+                    indicator.textContent = '✅ 保存完了';
+                    setTimeout(() => {
+                        indicator.style.display = 'none';
+                    }, 2000);
+                    break;
+                case 'error':
+                    indicator.textContent = '❌ 保存エラー';
+                    setTimeout(() => {
+                        indicator.style.display = 'none';
+                    }, 3000);
+                    break;
+            }
+        }
+
+        // 手動保存
+        function saveDocument() {
+            showSaveIndicator('saving');
+            
+            // 実際のAPIコール
+            fetch('/api/documents/save', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    documentType: document.getElementById('documentSelect').value,
+                    data: currentData
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                console.log('Document saved:', data);
+                showSaveIndicator('saved');
+                originalData = { ...currentData };
+            })
+            .catch(error => {
+                console.error('Save error:', error);
+                showSaveIndicator('error');
+            });
+        }
+
+        // 元に戻す
+        function resetDocument() {
+            if (confirm('編集した内容を元に戻しますか？')) {
+                document.querySelectorAll('.editable-field').forEach(field => {
+                    const key = field.dataset.key;
+                    if (originalData[key]) {
+                        field.textContent = originalData[key];
+                        currentData[key] = originalData[key];
+                    }
+                });
+                showSaveIndicator('saved');
+            }
+        }
+
+        // PDF出力
+        function downloadPDF() {
+            const documentType = document.getElementById('documentSelect').value;
+            showSaveIndicator('saving');
+            
+            fetch('/api/pdf/generate', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    documentType: documentType,
+                    data: currentData
+                })
+            })
+            .then(response => response.blob())
+            .then(blob => {
+                const url = window.URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `${documentTemplates[documentType].title}_${new Date().toISOString().split('T')[0]}.pdf`;
+                document.body.appendChild(a);
+                a.click();
+                window.URL.revokeObjectURL(url);
+                document.body.removeChild(a);
+                showSaveIndicator('saved');
+            })
+            .catch(error => {
+                console.error('PDF generation error:', error);
+                showSaveIndicator('error');
+            });
+        }
+    </script>
+</body>
+</html>

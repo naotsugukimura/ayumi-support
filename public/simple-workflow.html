@@ -1,0 +1,525 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>歩みサポート - 面談記録作成</title>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Noto Sans JP', sans-serif;
+            background: linear-gradient(135deg, #ffeaa7 0%, #fab1a0 50%, #fd79a8 100%);
+            min-height: 100vh;
+            color: #333;
+            font-size: 18px;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .header {
+            text-align: center;
+            color: white;
+            margin-bottom: 2rem;
+        }
+
+        .header h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+        }
+
+        .header p {
+            font-size: 1.2rem;
+            opacity: 0.9;
+        }
+
+        .workflow-card {
+            background: white;
+            border-radius: 20px;
+            padding: 2rem;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            margin-bottom: 2rem;
+        }
+
+        .step {
+            padding: 2rem;
+            margin: 1rem 0;
+            border-radius: 15px;
+            background: #f8f9fa;
+            border-left: 6px solid #67b279;
+        }
+
+        .step.active {
+            background: #e8f5e8;
+            border-left-color: #27ae60;
+        }
+
+        .step-title {
+            font-size: 1.4rem;
+            font-weight: 600;
+            color: #2c3e50;
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+        }
+
+        .step-icon {
+            font-size: 2rem;
+            margin-right: 1rem;
+        }
+
+        .upload-area {
+            border: 3px dashed #67b279;
+            border-radius: 15px;
+            padding: 3rem;
+            text-align: center;
+            background: white;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .upload-area:hover {
+            background: #f0f4ff;
+            border-color: #5a6fd8;
+        }
+
+        .upload-area.dragover {
+            background: #e8f0fe;
+            border-color: #4285f4;
+        }
+
+        .upload-icon {
+            font-size: 4rem;
+            color: #67b279;
+            margin-bottom: 1rem;
+        }
+
+        .upload-text {
+            font-size: 1.3rem;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+            color: #333;
+        }
+
+        #audioFile {
+            display: none;
+        }
+
+        .btn {
+            background: #67b279;
+            color: white;
+            border: none;
+            padding: 1rem 2rem;
+            border-radius: 25px;
+            font-size: 18px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin: 0.5rem;
+            min-height: 50px;
+        }
+
+        .btn:hover {
+            background: #5a9f68;
+            transform: translateY(-2px);
+        }
+
+        .btn:disabled {
+            background: #bdc3c7;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .btn-primary {
+            background: #3498db;
+        }
+
+        .btn-primary:hover {
+            background: #2980b9;
+        }
+
+        .transcription-area {
+            background: white;
+            border-radius: 10px;
+            padding: 1.5rem;
+            border: 1px solid #ddd;
+            margin: 1rem 0;
+        }
+
+        #transcriptionText {
+            width: 100%;
+            min-height: 250px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            padding: 1rem;
+            font-size: 16px;
+            line-height: 1.6;
+            resize: vertical;
+        }
+
+        .document-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1rem;
+            margin: 1rem 0;
+        }
+
+        .document-card {
+            background: white;
+            border-radius: 10px;
+            padding: 1.5rem;
+            border: 2px solid #e0e0e0;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .document-card:hover {
+            border-color: #67b279;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+
+        .document-card.selected {
+            border-color: #67b279;
+            background: #f0f8f0;
+        }
+
+        .document-title {
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+            color: #333;
+        }
+
+        .document-description {
+            font-size: 0.9rem;
+            color: #666;
+        }
+
+        .loading {
+            display: none;
+            text-align: center;
+            color: #67b279;
+            font-weight: bold;
+            margin: 1rem 0;
+        }
+
+        .result-area {
+            background: #e8f5e8;
+            border-radius: 10px;
+            padding: 1.5rem;
+            margin: 1rem 0;
+            display: none;
+        }
+
+        .progress-info {
+            background: #d1ecf1;
+            border-radius: 8px;
+            padding: 1rem;
+            margin: 1rem 0;
+            color: #0c5460;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 1rem;
+            }
+            
+            .header h1 {
+                font-size: 2rem;
+            }
+            
+            .workflow-card {
+                padding: 1rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🌸 歩みサポート</h1>
+            <p>面談記録から帳票を自動作成</p>
+        </div>
+
+        <div class="workflow-card">
+            <!-- ステップ1: 音声アップロード -->
+            <div class="step active" id="step1">
+                <div class="step-title">
+                    <span class="step-icon">🎤</span>
+                    音声ファイルをアップロード
+                </div>
+                
+                <div class="upload-area" onclick="document.getElementById('audioFile').click()">
+                    <div class="upload-icon">📁</div>
+                    <div class="upload-text">面談音声ファイルをここにドロップ</div>
+                    <div class="upload-subtext">
+                        または、クリックしてファイルを選択<br>
+                        <strong>最大2時間の長い面談にも対応</strong>
+                    </div>
+                </div>
+                <input type="file" id="audioFile" accept=".mp3,.m4a,.wav,.aac" />
+                
+                <div style="text-align: center; margin-top: 1rem;">
+                    <button class="btn btn-primary" onclick="processAudio()">🎯 音声を文字起こし</button>
+                </div>
+                
+                <div class="loading" id="audioLoading">🎵 音声を処理中...</div>
+            </div>
+
+            <!-- ステップ2: 文字起こし確認・編集 -->
+            <div class="step" id="step2" style="display: none;">
+                <div class="step-title">
+                    <span class="step-icon">📝</span>
+                    文字起こし結果の確認・編集
+                </div>
+                
+                <div class="transcription-area">
+                    <textarea id="transcriptionText" placeholder="音声認識結果がここに表示されます..."></textarea>
+                </div>
+                
+                <div style="text-align: center;">
+                    <button class="btn" onclick="goToDocuments()">📋 帳票を生成する</button>
+                    <button class="btn btn-primary" onclick="goBackToStep1()">🔄 別の音声を処理</button>
+                </div>
+            </div>
+
+            <!-- ステップ3: 帳票選択・生成 -->
+            <div class="step" id="step3" style="display: none;">
+                <div class="step-title">
+                    <span class="step-icon">📋</span>
+                    生成する帳票を選択
+                </div>
+                
+                <div class="document-grid">
+                    <div class="document-card selected" data-doc="individual-support-plan">
+                        <div class="document-title">個別支援計画書</div>
+                        <div class="document-description">利用者の目標と支援内容を記載</div>
+                    </div>
+                    
+                    <div class="document-card selected" data-doc="monitoring-record">
+                        <div class="document-title">モニタリング記録</div>
+                        <div class="document-description">進捗状況と評価を記録</div>
+                    </div>
+                    
+                    <div class="document-card selected" data-doc="family-report">
+                        <div class="document-title">家族報告書</div>
+                        <div class="document-description">家族向けの進捗報告書</div>
+                    </div>
+                    
+                    <div class="document-card" data-doc="service-record">
+                        <div class="document-title">サービス提供実績記録</div>
+                        <div class="document-description">提供したサービス内容の記録</div>
+                    </div>
+                    
+                    <div class="document-card" data-doc="assessment-sheet">
+                        <div class="document-title">アセスメントシート</div>
+                        <div class="document-description">利用者のスキル評価記録</div>
+                    </div>
+                </div>
+                
+                <div style="text-align: center;">
+                    <button class="btn" onclick="generateSelectedDocuments()">📄 選択した帳票を生成</button>
+                    <button class="btn btn-primary" onclick="goBackToStep2()">📝 文字起こしを編集</button>
+                </div>
+                
+                <div class="loading" id="documentLoading">📋 帳票を生成中...</div>
+            </div>
+
+            <!-- ステップ4: 結果表示 -->
+            <div class="step" id="step4" style="display: none;">
+                <div class="step-title">
+                    <span class="step-icon">✅</span>
+                    生成完了
+                </div>
+                
+                <div class="result-area" id="resultArea">
+                    <h3>🎉 帳票生成が完了しました！</h3>
+                    <div id="downloadLinks"></div>
+                </div>
+                
+                <div style="text-align: center;">
+                    <button class="btn" onclick="startNewWorkflow()">🔄 新しい面談記録を作成</button>
+                    <button class="btn btn-primary" onclick="goToPreview()">👁️ 帳票を編集・プレビュー</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let currentTranscription = '';
+        
+        // ファイルアップロード設定
+        document.addEventListener('DOMContentLoaded', function() {
+            const uploadArea = document.querySelector('.upload-area');
+            const fileInput = document.getElementById('audioFile');
+
+            // ドラッグ&ドロップ
+            uploadArea.addEventListener('dragover', (e) => {
+                e.preventDefault();
+                uploadArea.classList.add('dragover');
+            });
+
+            uploadArea.addEventListener('dragleave', () => {
+                uploadArea.classList.remove('dragover');
+            });
+
+            uploadArea.addEventListener('drop', (e) => {
+                e.preventDefault();
+                uploadArea.classList.remove('dragover');
+                const files = e.dataTransfer.files;
+                if (files.length > 0) {
+                    fileInput.files = files;
+                }
+            });
+
+            // 帳票カード選択
+            document.querySelectorAll('.document-card').forEach(card => {
+                card.addEventListener('click', () => {
+                    card.classList.toggle('selected');
+                });
+            });
+        });
+
+        // 音声処理
+        async function processAudio() {
+            const fileInput = document.getElementById('audioFile');
+            if (!fileInput.files[0]) {
+                alert('音声ファイルを選択してください');
+                return;
+            }
+
+            const formData = new FormData();
+            formData.append('audioFile', fileInput.files[0]);
+
+            document.getElementById('audioLoading').style.display = 'block';
+            
+            try {
+                const response = await fetch('/api/audio/upload-and-transcribe', {
+                    method: 'POST',
+                    body: formData
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok) {
+                    currentTranscription = data.transcription.text;
+                    document.getElementById('transcriptionText').value = currentTranscription;
+                    showStep(2);
+                } else {
+                    alert('音声処理でエラーが発生しました: ' + data.error);
+                }
+            } catch (error) {
+                alert('サーバーとの通信でエラーが発生しました: ' + error.message);
+            } finally {
+                document.getElementById('audioLoading').style.display = 'none';
+            }
+        }
+
+        // 帳票生成
+        async function generateSelectedDocuments() {
+            const selectedCards = document.querySelectorAll('.document-card.selected');
+            if (selectedCards.length === 0) {
+                alert('生成する帳票を選択してください');
+                return;
+            }
+
+            const transcriptionText = document.getElementById('transcriptionText').value;
+            if (!transcriptionText.trim()) {
+                alert('文字起こしテキストが空です');
+                return;
+            }
+
+            document.getElementById('documentLoading').style.display = 'block';
+            
+            const downloadLinks = document.getElementById('downloadLinks');
+            downloadLinks.innerHTML = '';
+
+            try {
+                for (const card of selectedCards) {
+                    const docType = card.dataset.doc;
+                    const docTitle = card.querySelector('.document-title').textContent;
+                    
+                    const response = await fetch(`/api/pdf/${docType}`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({
+                            userName: '利用者名',
+                            staffName: '支援員名',
+                            transcriptionText: transcriptionText
+                        })
+                    });
+                    
+                    const data = await response.json();
+                    
+                    if (response.ok && data.filename) {
+                        const link = document.createElement('a');
+                        link.href = `/generated/${data.filename}`;
+                        link.target = '_blank';
+                        link.className = 'btn';
+                        link.style.display = 'block';
+                        link.style.margin = '10px 0';
+                        link.textContent = `📥 ${docTitle} をダウンロード`;
+                        downloadLinks.appendChild(link);
+                    }
+                }
+                
+                showStep(4);
+            } catch (error) {
+                alert('帳票生成でエラーが発生しました: ' + error.message);
+            } finally {
+                document.getElementById('documentLoading').style.display = 'none';
+            }
+        }
+
+        // ステップ表示
+        function showStep(stepNumber) {
+            // 全ステップを非表示
+            for (let i = 1; i <= 4; i++) {
+                const step = document.getElementById(`step${i}`);
+                step.style.display = 'none';
+                step.classList.remove('active');
+            }
+            
+            // 指定ステップを表示
+            const targetStep = document.getElementById(`step${stepNumber}`);
+            targetStep.style.display = 'block';
+            targetStep.classList.add('active');
+        }
+
+        // ナビゲーション
+        function goToDocuments() {
+            showStep(3);
+        }
+
+        function goBackToStep1() {
+            showStep(1);
+        }
+
+        function goBackToStep2() {
+            showStep(2);
+        }
+
+        function startNewWorkflow() {
+            showStep(1);
+            document.getElementById('audioFile').value = '';
+            document.getElementById('transcriptionText').value = '';
+            currentTranscription = '';
+        }
+
+        function goToPreview() {
+            window.open('/preview', '_blank');
+        }
+    </script>
+</body>
+</html>

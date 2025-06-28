@@ -1,0 +1,823 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SupportDocs - 管理ダッシュボード</title>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Noto Sans JP', sans-serif;
+            background: #f5f7fa;
+            color: #333;
+            line-height: 1.6;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 1rem 0;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        .header-content {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 0 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            font-size: 1.8rem;
+            font-weight: 700;
+        }
+
+        .header-nav {
+            display: flex;
+            gap: 2rem;
+            align-items: center;
+        }
+
+        .nav-link {
+            color: white;
+            text-decoration: none;
+            font-weight: 500;
+            padding: 0.5rem 1rem;
+            border-radius: 20px;
+            transition: background 0.3s;
+        }
+
+        .nav-link:hover, .nav-link.active {
+            background: rgba(255,255,255,0.2);
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        .page-title {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #2c3e50;
+        }
+
+        .page-subtitle {
+            font-size: 1.1rem;
+            color: #666;
+            margin-bottom: 2rem;
+        }
+
+        /* サーバーステータス */
+        .server-status {
+            background: white;
+            padding: 1.5rem;
+            border-radius: 15px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            margin-bottom: 2rem;
+            border-left: 5px solid #27ae60;
+        }
+
+        .status-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+
+        .status-title {
+            font-size: 1.3rem;
+            font-weight: 600;
+            color: #2c3e50;
+        }
+
+        .status-indicator {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-weight: 600;
+        }
+
+        .status-indicator.online {
+            color: #27ae60;
+        }
+
+        .status-indicator.offline {
+            color: #e74c3c;
+        }
+
+        .status-indicator.warning {
+            color: #f39c12;
+        }
+
+        .status-dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            animation: pulse 2s infinite;
+        }
+
+        .status-dot.online {
+            background: #27ae60;
+        }
+
+        .status-dot.offline {
+            background: #e74c3c;
+        }
+
+        .status-dot.warning {
+            background: #f39c12;
+        }
+
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.5; }
+            100% { opacity: 1; }
+        }
+
+        .status-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+        }
+
+        .status-item {
+            text-align: center;
+            padding: 1rem;
+            background: #f8f9fa;
+            border-radius: 10px;
+        }
+
+        .status-value {
+            font-size: 1.8rem;
+            font-weight: 700;
+            color: #667eea;
+            margin-bottom: 0.3rem;
+        }
+
+        .status-label {
+            font-size: 0.9rem;
+            color: #666;
+        }
+
+        /* 統計カード */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .stat-card {
+            background: white;
+            padding: 1.5rem;
+            border-radius: 15px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            transition: transform 0.3s ease;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-5px);
+        }
+
+        .stat-header {
+            display: flex;
+            justify-content: between;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+
+        .stat-icon {
+            font-size: 2.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .stat-number {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+        }
+
+        .stat-title {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: #2c3e50;
+            margin-bottom: 0.5rem;
+        }
+
+        .stat-description {
+            font-size: 0.9rem;
+            color: #666;
+        }
+
+        .stat-trend {
+            font-size: 0.9rem;
+            font-weight: 600;
+            margin-top: 0.5rem;
+        }
+
+        .trend-up {
+            color: #27ae60;
+        }
+
+        .trend-down {
+            color: #e74c3c;
+        }
+
+        /* チャート・グラフエリア */
+        .charts-section {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 2rem;
+            margin-bottom: 2rem;
+        }
+
+        .chart-card {
+            background: white;
+            padding: 1.5rem;
+            border-radius: 15px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        .chart-title {
+            font-size: 1.3rem;
+            font-weight: 600;
+            margin-bottom: 1rem;
+            color: #2c3e50;
+        }
+
+        .chart-placeholder {
+            height: 300px;
+            background: linear-gradient(135deg, #667eea20 0%, #764ba220 100%);
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #666;
+            font-size: 1.1rem;
+        }
+
+        /* 最近のアクティビティ */
+        .activity-section {
+            background: white;
+            padding: 1.5rem;
+            border-radius: 15px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            margin-bottom: 2rem;
+        }
+
+        .activity-item {
+            display: flex;
+            align-items: center;
+            padding: 1rem 0;
+            border-bottom: 1px solid #f0f0f0;
+        }
+
+        .activity-item:last-child {
+            border-bottom: none;
+        }
+
+        .activity-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 1rem;
+            font-size: 1.2rem;
+        }
+
+        .activity-icon.upload {
+            background: #667eea20;
+            color: #667eea;
+        }
+
+        .activity-icon.process {
+            background: #f39c1220;
+            color: #f39c12;
+        }
+
+        .activity-icon.complete {
+            background: #27ae6020;
+            color: #27ae60;
+        }
+
+        .activity-content {
+            flex: 1;
+        }
+
+        .activity-title {
+            font-weight: 600;
+            margin-bottom: 0.3rem;
+        }
+
+        .activity-details {
+            font-size: 0.9rem;
+            color: #666;
+        }
+
+        .activity-time {
+            font-size: 0.8rem;
+            color: #999;
+            margin-left: 1rem;
+        }
+
+        /* アラート */
+        .alerts-section {
+            margin-bottom: 2rem;
+        }
+
+        .alert {
+            padding: 1rem 1.5rem;
+            border-radius: 10px;
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .alert.success {
+            background: #d4edda;
+            border-left: 5px solid #27ae60;
+            color: #155724;
+        }
+
+        .alert.warning {
+            background: #fff3cd;
+            border-left: 5px solid #f39c12;
+            color: #856404;
+        }
+
+        .alert.error {
+            background: #f8d7da;
+            border-left: 5px solid #e74c3c;
+            color: #721c24;
+        }
+
+        .alert-icon {
+            font-size: 1.5rem;
+        }
+
+        /* アクションボタン */
+        .actions-section {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+
+        .btn {
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 0.8rem 1.5rem;
+            border-radius: 25px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: inline-block;
+        }
+
+        .btn:hover {
+            background: #5a6fd8;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-secondary {
+            background: #6c757d;
+        }
+
+        .btn-secondary:hover {
+            background: #5a6268;
+        }
+
+        .btn-success {
+            background: #28a745;
+        }
+
+        .btn-success:hover {
+            background: #218838;
+        }
+
+        .btn-danger {
+            background: #dc3545;
+        }
+
+        .btn-danger:hover {
+            background: #c82333;
+        }
+
+        /* レスポンシブ */
+        @media (max-width: 768px) {
+            .charts-section {
+                grid-template-columns: 1fr;
+            }
+
+            .header-nav {
+                display: none;
+            }
+
+            .container {
+                padding: 1rem;
+            }
+
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header class="header">
+        <div class="header-content">
+            <div class="logo">SupportDocs</div>
+            <nav class="header-nav">
+                <a href="/" class="nav-link">ホーム</a>
+                <a href="/workflow" class="nav-link">ワークフロー</a>
+                <a href="/dashboard" class="nav-link active">ダッシュボード</a>
+                <a href="/api-test.html" class="nav-link">管理画面</a>
+            </nav>
+        </div>
+    </header>
+
+    <div class="container">
+        <h1 class="page-title">🔍 システム管理ダッシュボード</h1>
+        <p class="page-subtitle">SupportDocsサーバーの稼働状況とパフォーマンスをリアルタイムで監視</p>
+
+        <!-- サーバーステータス -->
+        <div class="server-status">
+            <div class="status-header">
+                <h2 class="status-title">🖥️ サーバーステータス</h2>
+                <div class="status-indicator online" id="serverStatus">
+                    <div class="status-dot online"></div>
+                    オンライン - 正常稼働中
+                </div>
+            </div>
+
+            <div class="status-grid">
+                <div class="status-item">
+                    <div class="status-value" id="uptime">99.9%</div>
+                    <div class="status-label">稼働率 (24h)</div>
+                </div>
+                <div class="status-item">
+                    <div class="status-value" id="responseTime">245ms</div>
+                    <div class="status-label">平均応答時間</div>
+                </div>
+                <div class="status-item">
+                    <div class="status-value" id="cpuUsage">15%</div>
+                    <div class="status-label">CPU使用率</div>
+                </div>
+                <div class="status-item">
+                    <div class="status-value" id="memoryUsage">42%</div>
+                    <div class="status-label">メモリ使用率</div>
+                </div>
+                <div class="status-item">
+                    <div class="status-value" id="diskUsage">28%</div>
+                    <div class="status-label">ディスク使用率</div>
+                </div>
+                <div class="status-item">
+                    <div class="status-value" id="activeConnections">127</div>
+                    <div class="status-label">アクティブ接続</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- アラート -->
+        <div class="alerts-section">
+            <div class="alert success">
+                <div class="alert-icon">✅</div>
+                <div>
+                    <strong>システム正常稼働中</strong><br>
+                    全てのサービスが正常に動作しています。
+                </div>
+            </div>
+            <div class="alert warning" style="display: none;" id="warningAlert">
+                <div class="alert-icon">⚠️</div>
+                <div>
+                    <strong>注意</strong><br>
+                    メモリ使用率が80%を超えています。
+                </div>
+            </div>
+        </div>
+
+        <!-- 統計カード -->
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-icon">📊</div>
+                <div class="stat-number">1,247</div>
+                <div class="stat-title">今日の処理件数</div>
+                <div class="stat-description">音声ファイル処理数</div>
+                <div class="stat-trend trend-up">+23% 昨日比</div>
+            </div>
+
+            <div class="stat-card">
+                <div class="stat-icon">⏱️</div>
+                <div class="stat-number">156,790分</div>
+                <div class="stat-title">累計節約時間</div>
+                <div class="stat-description">今月の効率化効果</div>
+                <div class="stat-trend trend-up">+187% 先月比</div>
+            </div>
+
+            <div class="stat-card">
+                <div class="stat-icon">📋</div>
+                <div class="stat-number">3,891</div>
+                <div class="stat-title">生成帳票数</div>
+                <div class="stat-description">今月生成された帳票</div>
+                <div class="stat-trend trend-up">+45% 先月比</div>
+            </div>
+
+            <div class="stat-card">
+                <div class="stat-icon">🎯</div>
+                <div class="stat-number">97.8%</div>
+                <div class="stat-title">平均認識精度</div>
+                <div class="stat-description">音声認識の精度</div>
+                <div class="stat-trend trend-up">+2.1% 先月比</div>
+            </div>
+
+            <div class="stat-card">
+                <div class="stat-icon">👥</div>
+                <div class="stat-number">847</div>
+                <div class="stat-title">アクティブユーザー</div>
+                <div class="stat-description">今月の利用者数</div>
+                <div class="stat-trend trend-up">+89% 先月比</div>
+            </div>
+
+            <div class="stat-card">
+                <div class="stat-icon">💰</div>
+                <div class="stat-number">¥7,890,000</div>
+                <div class="stat-title">削減人件費</div>
+                <div class="stat-description">今月の効果額</div>
+                <div class="stat-trend trend-up">+156% 先月比</div>
+            </div>
+        </div>
+
+        <!-- チャートエリア -->
+        <div class="charts-section">
+            <div class="chart-card">
+                <h3 class="chart-title">📈 処理件数推移 (7日間)</h3>
+                <div class="chart-placeholder">
+                    リアルタイムチャートが表示されます<br>
+                    (実装予定: Chart.js/D3.js)
+                </div>
+            </div>
+
+            <div class="chart-card">
+                <h3 class="chart-title">🔧 サービス稼働状況</h3>
+                <div class="status-grid">
+                    <div class="status-item">
+                        <div class="status-indicator online">
+                            <div class="status-dot online"></div>
+                            API Server
+                        </div>
+                    </div>
+                    <div class="status-item">
+                        <div class="status-indicator online">
+                            <div class="status-dot online"></div>
+                            Database
+                        </div>
+                    </div>
+                    <div class="status-item">
+                        <div class="status-indicator online">
+                            <div class="status-dot online"></div>
+                            OpenAI API
+                        </div>
+                    </div>
+                    <div class="status-item">
+                        <div class="status-indicator online">
+                            <div class="status-dot online"></div>
+                            Anthropic API
+                        </div>
+                    </div>
+                    <div class="status-item">
+                        <div class="status-indicator online">
+                            <div class="status-dot online"></div>
+                            File Storage
+                        </div>
+                    </div>
+                    <div class="status-item">
+                        <div class="status-indicator online">
+                            <div class="status-dot online"></div>
+                            PDF Generator
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 最近のアクティビティ -->
+        <div class="activity-section">
+            <h3 class="chart-title">📝 最近のアクティビティ</h3>
+            
+            <div class="activity-item">
+                <div class="activity-icon upload">🎤</div>
+                <div class="activity-content">
+                    <div class="activity-title">面談音声ファイルがアップロードされました</div>
+                    <div class="activity-details">ファイル: interview_20250627_143022.mp3 (15.2MB)</div>
+                </div>
+                <div class="activity-time">2分前</div>
+            </div>
+
+            <div class="activity-item">
+                <div class="activity-icon process">⚙️</div>
+                <div class="activity-content">
+                    <div class="activity-title">音声認識処理が完了しました</div>
+                    <div class="activity-details">精度: 98.2% | 処理時間: 47秒</div>
+                </div>
+                <div class="activity-time">3分前</div>
+            </div>
+
+            <div class="activity-item">
+                <div class="activity-icon complete">📋</div>
+                <div class="activity-content">
+                    <div class="activity-title">複数帳票の生成が完了しました</div>
+                    <div class="activity-details">個別支援計画書、モニタリング記録、家族報告書</div>
+                </div>
+                <div class="activity-time">5分前</div>
+            </div>
+
+            <div class="activity-item">
+                <div class="activity-icon upload">🎤</div>
+                <div class="activity-content">
+                    <div class="activity-title">面談音声ファイルがアップロードされました</div>
+                    <div class="activity-details">ファイル: meeting_20250627_141505.m4a (22.8MB)</div>
+                </div>
+                <div class="activity-time">12分前</div>
+            </div>
+
+            <div class="activity-item">
+                <div class="activity-icon complete">✅</div>
+                <div class="activity-content">
+                    <div class="activity-title">データベース自動更新が完了しました</div>
+                    <div class="activity-details">利用者マスタ、サービス実績記録を更新</div>
+                </div>
+                <div class="activity-time">18分前</div>
+            </div>
+        </div>
+
+        <!-- アクションボタン -->
+        <div class="actions-section">
+            <a href="/workflow" class="btn">🚀 新しい面談記録を作成</a>
+            <a href="/api-test.html" class="btn btn-secondary">⚙️ 詳細管理画面</a>
+            <button class="btn btn-success" onclick="checkSystemHealth()">🏥 ヘルスチェック実行</button>
+            <button class="btn btn-danger" onclick="emergencyStop()">⛔ 緊急停止</button>
+        </div>
+    </div>
+
+    <script>
+        // ページ読み込み時の初期化
+        document.addEventListener('DOMContentLoaded', function() {
+            initializeDashboard();
+            startRealTimeUpdates();
+        });
+
+        function initializeDashboard() {
+            console.log('ダッシュボードを初期化中...');
+            checkServerHealth();
+            updateStatistics();
+        }
+
+        // リアルタイム更新の開始
+        function startRealTimeUpdates() {
+            // 30秒ごとにステータスを更新
+            setInterval(updateServerStatus, 30000);
+            
+            // 5分ごとに統計を更新
+            setInterval(updateStatistics, 300000);
+            
+            // 10秒ごとにアクティビティログを更新
+            setInterval(updateActivityLog, 10000);
+        }
+
+        // サーバーヘルスチェック
+        async function checkServerHealth() {
+            try {
+                const response = await fetch('/api/health');
+                const data = await response.json();
+                
+                if (response.ok && data.status === 'healthy') {
+                    updateServerStatusDisplay('online');
+                } else {
+                    updateServerStatusDisplay('warning');
+                }
+            } catch (error) {
+                console.error('ヘルスチェックエラー:', error);
+                updateServerStatusDisplay('offline');
+            }
+        }
+
+        function updateServerStatusDisplay(status) {
+            const statusElement = document.getElementById('serverStatus');
+            const statusClasses = {
+                online: { class: 'online', text: 'オンライン - 正常稼働中', dot: 'online' },
+                warning: { class: 'warning', text: '警告 - 一部サービスに問題', dot: 'warning' },
+                offline: { class: 'offline', text: 'オフライン - サービス停止', dot: 'offline' }
+            };
+
+            const config = statusClasses[status];
+            statusElement.className = `status-indicator ${config.class}`;
+            statusElement.innerHTML = `<div class="status-dot ${config.dot}"></div>${config.text}`;
+        }
+
+        // サーバーステータス更新
+        function updateServerStatus() {
+            // CPU使用率をランダムに更新（実際はAPIから取得）
+            const cpuUsage = Math.floor(Math.random() * 30) + 10;
+            document.getElementById('cpuUsage').textContent = cpuUsage + '%';
+
+            // メモリ使用率をランダムに更新
+            const memoryUsage = Math.floor(Math.random() * 40) + 30;
+            document.getElementById('memoryUsage').textContent = memoryUsage + '%';
+
+            // 応答時間をランダムに更新
+            const responseTime = Math.floor(Math.random() * 200) + 150;
+            document.getElementById('responseTime').textContent = responseTime + 'ms';
+
+            // アクティブ接続数をランダムに更新
+            const connections = Math.floor(Math.random() * 100) + 80;
+            document.getElementById('activeConnections').textContent = connections;
+
+            // 警告アラートの表示制御
+            const warningAlert = document.getElementById('warningAlert');
+            if (memoryUsage > 70) {
+                warningAlert.style.display = 'flex';
+            } else {
+                warningAlert.style.display = 'none';
+            }
+        }
+
+        // 統計データ更新
+        function updateStatistics() {
+            // 実際のAPIから統計データを取得してUIを更新
+            console.log('統計データを更新中...');
+        }
+
+        // アクティビティログ更新
+        function updateActivityLog() {
+            // 新しいアクティビティがあるかチェック
+            console.log('アクティビティログを確認中...');
+        }
+
+        // ヘルスチェック実行
+        async function checkSystemHealth() {
+            const button = event.target;
+            const originalText = button.textContent;
+            
+            button.textContent = '🔄 チェック中...';
+            button.disabled = true;
+
+            try {
+                await checkServerHealth();
+                button.textContent = '✅ チェック完了';
+                
+                setTimeout(() => {
+                    button.textContent = originalText;
+                    button.disabled = false;
+                }, 2000);
+                
+            } catch (error) {
+                button.textContent = '❌ エラー発生';
+                console.error('ヘルスチェックエラー:', error);
+                
+                setTimeout(() => {
+                    button.textContent = originalText;
+                    button.disabled = false;
+                }, 2000);
+            }
+        }
+
+        // 緊急停止
+        function emergencyStop() {
+            if (confirm('⚠️ 緊急停止を実行しますか？\n\nこの操作により全てのサービスが停止されます。')) {
+                alert('🛑 緊急停止を実行しました。\n\nシステム管理者に連絡してください。');
+                // 実際の緊急停止処理をここに実装
+            }
+        }
+
+        // シミュレーション用の定期更新
+        setInterval(() => {
+            updateServerStatus();
+        }, 5000);
+
+        // 初期データロード
+        setTimeout(() => {
+            updateServerStatus();
+        }, 1000);
+    </script>
+</body>
+</html>
